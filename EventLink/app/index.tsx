@@ -11,10 +11,14 @@ export default function Index() {
         alignItems: "center",
       }}
     >
-      <Text>EventLink</Text>
+      {/* EventLink: Bigger & Bold */}
+      <Text style={{ fontSize: 32, fontWeight: "bold" }}>EventLink</Text>
+      
       <StatusBar style="auto" />
-      <Link href="/profile" style={{ color: "blue" }}> 
-        Go to Profile 
+
+      {/* Go to Profile: Smaller & Blue */}
+      <Link href="/home" style={{ fontSize: 18, color: "blue" }}> 
+        Go to Home 
       </Link>
     </View>
   );
