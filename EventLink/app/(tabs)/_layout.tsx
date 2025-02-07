@@ -16,7 +16,7 @@ const TabIcon: React.FC<TabIconProps> = ({ icon, color, name, focused }) => {
     <View>
       <Image
         source={icon}
-        style={{ width: 25, height: 25 }}
+        style={{ width: 20, height: 20, marginLeft: 3, marginTop: 20}}
         resizeMode="contain"
         tintColor={color}
       />
@@ -50,6 +50,56 @@ const TabsLayout = () => {
         )
       }}
       />
+
+    <Tabs.Screen
+      name = "create"
+      options= {{
+        title: 'Create',
+        headerShown: false,
+        tabBarIcon: ({ color, focused}) => (
+          <TabIcon
+          icon = {icons.create}
+          color = {color}
+          name="Create"
+          focused={focused}
+          />
+        )
+      }}
+      />
+
+    <Tabs.Screen
+      name = "bookmark"
+      options= {{
+        title: 'Bookmark',
+        headerShown: false,
+        tabBarIcon: ({ color, focused}) => (
+          <TabIcon
+          icon = {icons.bookmark}
+          color = {color}
+          name="Saved"
+          focused={focused}
+          />
+        )
+      }}
+      />
+
+    <Tabs.Screen
+      name = "profile"
+      options= {{
+        title: 'Profile',
+        headerShown: false,
+        tabBarIcon: ({ color, focused}) => (
+          <TabIcon
+          icon = {icons.user}
+          color = {color}
+          name="Profile"
+          focused={focused}
+          />
+        )
+      }}
+      />
+
+
     </Tabs>
     </>
   )
@@ -59,14 +109,18 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 20, // 👈 Moves both icon & text lower
   },
   icon: {
-    width: 25,
-    height: 25,
+    marginLeft: 10,
+    width: 20,
+    height: 20,
+    marginBottom: 20, // 👈 Adds spacing between icon & text
   },
   text: {
-    fontSize: 10,
-    marginTop: 2,
+    marginTop: 5,
+    fontSize: 9,
+    textAlign: 'center',
   },
 });
 
