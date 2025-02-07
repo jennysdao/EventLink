@@ -20,7 +20,7 @@ const TabIcon: React.FC<TabIconProps> = ({ icon, color, name, focused }) => {
         resizeMode="contain"
         tintColor={color}
       />
-      <Text style={[styles.text, { color: color, fontFamily: focused ? 'Inter-Bold' : 'Inter-Medium' }]}>
+      <Text style={[styles.text, { color: color, fontFamily: focused ? 'Inter-Black' : 'Inter-Medium' }]}>
         {name}
       </Text>
     </View>
@@ -32,7 +32,15 @@ const TabsLayout = () => {
     <>
     <Tabs
       screenOptions={{
-        tabBarShowLabel: false
+        tabBarShowLabel: false,
+        tabBarActiveTintColor: '#FFFF',
+        tabBarInactiveTintColor: '#90949A',
+        tabBarStyle: {
+          backgroundColor: '#393E44',
+          borderTopWidth: 1,
+          height: 90,
+        }
+
       }}
       >
       <Tabs.Screen
