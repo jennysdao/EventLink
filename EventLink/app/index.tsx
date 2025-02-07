@@ -1,6 +1,9 @@
-import { View, Text, Image, StyleSheet, Dimensions } from "react-native";
+import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity} from "react-native";
 import { LinearGradient } from "expo-linear-gradient"; // ✅ Use expo-linear-gradient
 import images from "../constants/images";
+import { Redirect, router } from "expo-router";
+import ContinueButton from "../components/continueButton"; // ✅ Import Button Component
+
 
 const { width, height } = Dimensions.get("window");
 
@@ -19,9 +22,9 @@ export default function Index() {
           <Text style={styles.linkText}>Link</Text>
         </View>
         <Text style={styles.poweredBy}>Powered by Agile Aces</Text>
+        <ContinueButton text="Continue" />
       </View>
 
-      {/* Waves Image Positioned at the Bottom */}
       <Image source={images.waves} style={styles.waves} resizeMode="contain" />
     </LinearGradient>
   );
@@ -36,7 +39,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     justifyContent: "center",
-    flex: 1, // Allows the content to take up the space above waves
+    flex: 1,
   },
   logo: {
     width: 191,
@@ -63,10 +66,24 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     marginTop: 5,
   },
+  continueButton: {
+    bottom: -30,
+    backgroundColor: "#ABC1E2", // Light blue button
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 25,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  continueText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#3F587D",
+  },
   waves: {
     position: "absolute",
-    bottom: -1000, // Moves the waves slightly down to make it cover more
-    width: width * 4, // Makes it even wider (150% of screen width)
-    height: height * 3, // Covers 60% of the screen height
+    bottom: -1000, 
+    width: width * 4,
+    height: height * 3,
   },
 });
