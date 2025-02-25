@@ -117,13 +117,13 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20, // 👈 Moves both icon & text lower
+    marginTop: 20,
   },
   icon: {
     marginLeft: 10,
     width: 20,
     height: 20,
-    marginBottom: 20, // 👈 Adds spacing between icon & text
+    marginBottom: 20,
   },
   text: {
     marginTop: 5,
