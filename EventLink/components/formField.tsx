@@ -1,8 +1,16 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { Checkbox } from "expo-checkbox";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router"; // ✅ Import router
+import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+interface User {
+  id: number;
+  email: string;
+  password: string;
+  name: string;
+}
 
 interface FormFieldProps {
   email: string;
@@ -13,10 +21,50 @@ interface FormFieldProps {
   setRememberMe: (value: boolean) => void;
 }
 
-
 const FormField: React.FC<FormFieldProps> = ({ email, setEmail, password, setPassword, rememberMe, setRememberMe }) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const router = useRouter(); // ✅ Initialize router
+  const [users, setUsers] = useState<User[]>([]); // Load users from AsyncStorage
+  const router = useRouter();
+
+  // Load users from AsyncStorage when the component mounts
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const storedUsers = await AsyncStorage.getItem("users");
+        if (storedUsers) {
+          setUsers(JSON.parse(storedUsers));
+        }
+      } catch (error) {
+        console.error("Error loading users:", error);
+      }
+    };
+    loadUsers();
+  }, []);
+
+  // Authenticate user using stored dummy data
+  const handleSignIn = async () => {
+    try {
+      const storedUsers = await AsyncStorage.getItem("users");
+      const usersList: User[] = storedUsers ? JSON.parse(storedUsers) : [];
+  
+      const lowerCaseEmail = email.toLowerCase();
+      const userExists = usersList.find(
+        (user) => user.email.toLowerCase() === lowerCaseEmail && user.password === password
+      );
+  
+      if (userExists) {
+        console.log("✅ User authenticated. Redirecting to School Selection...");
+        router.push("/(auth)/school-select"); // ✅ Always navigate to school selection
+      } else {
+        Alert.alert("Error", "Invalid email or password.");
+      }
+    } catch (error) {
+      console.error("❌ Error signing in:", error);
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    }
+  };
+  
+  
 
   return (
     <View style={styles.formContainer}>
@@ -30,7 +78,7 @@ const FormField: React.FC<FormFieldProps> = ({ email, setEmail, password, setPas
         onChangeText={setEmail}
       />
 
-      {/* Password Input with Toggle */}
+      {/* Password Input */}
       <Text style={styles.label}>Password</Text>
       <View style={styles.passwordContainer}>
         <TextInput
@@ -53,14 +101,14 @@ const FormField: React.FC<FormFieldProps> = ({ email, setEmail, password, setPas
       </View>
 
       {/* Sign In Button */}
-      <TouchableOpacity style={styles.signInButton}>
+      <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
         <Text style={styles.signInButtonText}>Sign In</Text>
       </TouchableOpacity>
 
       {/* "Create an Account" Link */}
       <View style={styles.signUpContainer}>
-        <Text style={styles.signUpText}>First time here?</Text>
-        <TouchableOpacity onPress={() => router.push("/sign-up")}>
+        <Text style={styles.signUpText}>Don't have an account?</Text>
+        <TouchableOpacity onPress={() => router.push("/(auth)/sign-up")}>
           <Text style={styles.signUpLink}> Create an account</Text>
         </TouchableOpacity>
       </View>
@@ -79,7 +127,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 5,
-    elevation: 5, // Android shadow
+    elevation: 5,
   },
   label: {
     fontSize: 14,
@@ -121,7 +169,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 5,
     alignItems: "center",
-    marginBottom: 15, // Spacing before the Sign Up link
+    marginBottom: 15,
   },
   signInButtonText: {
     color: "white",

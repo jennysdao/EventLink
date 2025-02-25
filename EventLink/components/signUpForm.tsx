@@ -1,20 +1,109 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+interface User {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+}
 
 const SignUpForm = () => {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
 
   const router = useRouter();
 
+  // Load users from AsyncStorage when the component mounts
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const storedUsers = await AsyncStorage.getItem("users");
+        if (storedUsers) {
+          setUsers(JSON.parse(storedUsers));
+        }
+      } catch (error) {
+        console.error("Error loading users:", error);
+      }
+    };
+    loadUsers();
+  }, []);
+
+  const handleSignUp = async () => {
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
+      Alert.alert("Error", "Please fill in all fields.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match.");
+      return;
+    }
+
+    const lowerCaseEmail = email.toLowerCase();
+
+    const userExists = users.find((user) => user.email === lowerCaseEmail);
+    if (userExists) {
+      Alert.alert("Error", "Email already in use.");
+      return;
+    }
+
+    // Create a new user and add to local storage
+    const newUser: User = {
+      id: users.length + 1,
+      firstName,
+      lastName,
+      email: lowerCaseEmail, // Store email in lowercase
+      password,
+    };
+
+    const updatedUsers = [...users, newUser];
+    setUsers(updatedUsers);
+    await AsyncStorage.setItem("users", JSON.stringify(updatedUsers));
+
+    Alert.alert("Success", "Account created successfully!", [
+      { text: "OK", onPress: () => router.push("/(auth)/sign-in") },
+    ]);
+  };
+
   return (
     <View style={styles.formContainer}>
-      {/* Email Input */}
+      {/* First Name & Last Name - Side by Side */}
+      <View style={styles.nameContainer}>
+        <View style={styles.inputWrapper}>
+          <Text style={styles.label}>First Name</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="First Name"
+            placeholderTextColor="#A9A9A9"
+            value={firstName}
+            onChangeText={setFirstName}
+          />
+        </View>
+
+        <View style={styles.inputWrapper}>
+          <Text style={styles.label}>Last Name</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Last Name"
+            placeholderTextColor="#A9A9A9"
+            value={lastName}
+            onChangeText={setLastName}
+          />
+        </View>
+      </View>
+
+      {/* Email */}
       <Text style={styles.label}>Email</Text>
       <TextInput
         style={styles.input}
@@ -24,7 +113,7 @@ const SignUpForm = () => {
         onChangeText={setEmail}
       />
 
-      {/* Password Input with Toggle */}
+      {/* Password */}
       <Text style={styles.label}>Password</Text>
       <View style={styles.passwordContainer}>
         <TextInput
@@ -40,7 +129,7 @@ const SignUpForm = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Confirm Password Input with Toggle */}
+      {/* Confirm Password */}
       <Text style={styles.label}>Confirm Password</Text>
       <View style={styles.passwordContainer}>
         <TextInput
@@ -57,14 +146,14 @@ const SignUpForm = () => {
       </View>
 
       {/* Sign Up Button */}
-      <TouchableOpacity style={styles.signUpButton}>
+      <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
         <Text style={styles.signUpButtonText}>Sign Up</Text>
       </TouchableOpacity>
 
       {/* Already Have an Account? Go to Sign In */}
       <View style={styles.signInContainer}>
         <Text style={styles.signInText}>Already have an account?</Text>
-        <TouchableOpacity onPress={() => router.push("/sign-in")}>
+        <TouchableOpacity onPress={() => router.push("/(auth)/sign-in")}>
           <Text style={styles.signInLink}> Sign In</Text>
         </TouchableOpacity>
       </View>
@@ -84,6 +173,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 5,
     elevation: 5,
+  },
+  nameContainer: {
+    flexDirection: "row", // ✅ Align inputs side by side
+    justifyContent: "space-between",
+  },
+  inputWrapper: {
+    flex: 1, // ✅ Allows equal spacing
+    marginRight: 10, // Adds spacing between first and last name
   },
   label: {
     fontSize: 14,
@@ -113,7 +210,6 @@ const styles = StyleSheet.create({
   signUpButton: {
     backgroundColor: "#1f2c40",
     paddingVertical: 12,
-    marginTop: 8,
     borderRadius: 5,
     alignItems: "center",
     marginBottom: 15,
