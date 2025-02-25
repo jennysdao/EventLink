@@ -1,22 +1,16 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
-import { Checkbox } from "expo-checkbox";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router"; // ✅ Import router
+import { useRouter } from "expo-router";
 
-interface FormFieldProps {
-  email: string;
-  setEmail: (email: string) => void;
-  password: string;
-  setPassword: (password: string) => void;
-  rememberMe: boolean;
-  setRememberMe: (value: boolean) => void;
-}
-
-
-const FormField: React.FC<FormFieldProps> = ({ email, setEmail, password, setPassword, rememberMe, setRememberMe }) => {
+const SignUpForm = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const router = useRouter(); // ✅ Initialize router
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+
+  const router = useRouter();
 
   return (
     <View style={styles.formContainer}>
@@ -46,22 +40,32 @@ const FormField: React.FC<FormFieldProps> = ({ email, setEmail, password, setPas
         </TouchableOpacity>
       </View>
 
-      {/* Remember Me Checkbox */}
-      <View style={styles.checkboxContainer}>
-        <Checkbox value={rememberMe} onValueChange={setRememberMe} color={rememberMe ? "#3F587D" : undefined} />
-        <Text style={styles.checkboxText}>Remember login</Text>
+      {/* Confirm Password Input with Toggle */}
+      <Text style={styles.label}>Confirm Password</Text>
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Re-enter Password"
+          placeholderTextColor="#A9A9A9"
+          secureTextEntry={!isConfirmPasswordVisible}
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+        />
+        <TouchableOpacity onPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)} style={styles.eyeIcon}>
+          <Ionicons name={isConfirmPasswordVisible ? "eye-off-outline" : "eye-outline"} size={20} color="white" />
+        </TouchableOpacity>
       </View>
 
-      {/* Sign In Button */}
-      <TouchableOpacity style={styles.signInButton}>
-        <Text style={styles.signInButtonText}>Sign In</Text>
+      {/* Sign Up Button */}
+      <TouchableOpacity style={styles.signUpButton}>
+        <Text style={styles.signUpButtonText}>Sign Up</Text>
       </TouchableOpacity>
 
-      {/* "Create an Account" Link */}
-      <View style={styles.signUpContainer}>
-        <Text style={styles.signUpText}>First time here?</Text>
-        <TouchableOpacity onPress={() => router.push("/sign-up")}>
-          <Text style={styles.signUpLink}> Create an account</Text>
+      {/* Already Have an Account? Go to Sign In */}
+      <View style={styles.signInContainer}>
+        <Text style={styles.signInText}>Already have an account?</Text>
+        <TouchableOpacity onPress={() => router.push("/sign-in")}>
+          <Text style={styles.signInLink}> Sign In</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -72,14 +76,14 @@ const styles = StyleSheet.create({
   formContainer: {
     width: "100%",
     maxWidth: 350,
-    backgroundColor: "#1f2c40",
+    backgroundColor: "#3F587D",
     padding: 20,
     borderRadius: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 5,
-    elevation: 5, // Android shadow
+    elevation: 5,
   },
   label: {
     fontSize: 14,
@@ -106,42 +110,33 @@ const styles = StyleSheet.create({
     right: 10,
     top: 12,
   },
-  checkboxContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  checkboxText: {
-    marginLeft: 10,
-    fontSize: 14,
-    color: "white",
-  },
-  signInButton: {
-    backgroundColor: "#3F587D",
+  signUpButton: {
+    backgroundColor: "#1f2c40",
     paddingVertical: 12,
+    marginTop: 8,
     borderRadius: 5,
     alignItems: "center",
-    marginBottom: 15, // Spacing before the Sign Up link
+    marginBottom: 15,
   },
-  signInButtonText: {
+  signUpButtonText: {
     color: "white",
     fontSize: 18,
     fontWeight: "bold",
   },
-  signUpContainer: {
+  signInContainer: {
     flexDirection: "row",
     justifyContent: "center",
     marginTop: 5,
   },
-  signUpText: {
+  signInText: {
     color: "#A9A9A9",
     fontSize: 14,
   },
-  signUpLink: {
+  signInLink: {
     color: "#ABC1E2",
     fontSize: 14,
     fontWeight: "bold",
   },
 });
 
-export default FormField;
+export default SignUpForm;
