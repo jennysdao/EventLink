@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import { 
-  View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, Alert, Platform, Modal 
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, Alert, Platform } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -16,10 +14,12 @@ const CreateEvent = () => {
   const [requirements, setRequirements] = useState("");
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(true);
+  const [time, setTime] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const router = useRouter();
 
-  // ✅ Function to Pick Image
+  // ✅ Pick Image
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -33,20 +33,22 @@ const CreateEvent = () => {
     }
   };
 
-  // ✅ Show Date Picker
-  const openDatePicker = () => {
-    setShowDatePicker(true);
-  };
+  // ✅ Show Date & Time Pickers
+  const openDatePicker = () => setShowDatePicker(true);
+  const openTimePicker = () => setShowTimePicker(true);
 
-  // ✅ Handle Date Selection
+  // ✅ Handle Date & Time Changes
   const onDateChange = (event: any, selectedDate?: Date) => {
-    if (selectedDate) {
-      setDate(selectedDate);
-    }
-    setShowDatePicker(Platform.OS === "ios"); // Close for Android, keep open for iOS
+    if (selectedDate) setDate(selectedDate);
+    setShowDatePicker(false);
   };
 
-  // ✅ Save Event to AsyncStorage
+  const onTimeChange = (event: any, selectedTime?: Date) => {
+    if (selectedTime) setTime(selectedTime);
+    setShowTimePicker(false);
+  };
+
+  // ✅ Save Event
   const handleShareEvent = async () => {
     if (!title || !about || !address) {
       Alert.alert("Missing Fields", "Please fill in all required fields before sharing.");
@@ -62,7 +64,16 @@ const CreateEvent = () => {
       creator = `${latestUser.firstName} ${latestUser.lastName}`;
     }
 
-    const newEvent = { title, about, address, requirements, imageUri, creator, date: date.toISOString() };
+    const newEvent = { 
+      title, 
+      about, 
+      address, 
+      requirements, 
+      imageUri, 
+      creator, 
+      date: date.toISOString(), 
+      time: time.toISOString()
+    };
 
     try {
       const existingEvents = await AsyncStorage.getItem("events");
@@ -71,7 +82,7 @@ const CreateEvent = () => {
       await AsyncStorage.setItem("events", JSON.stringify(eventsList));
 
       Alert.alert("Success", "Event has been shared!");
-      setTitle(""); setAbout(""); setAddress(""); setRequirements(""); setImageUri(null); setDate(new Date());
+      setTitle(""); setAbout(""); setAddress(""); setRequirements(""); setImageUri(null); setDate(new Date()); setTime(new Date());
       router.push("/(tabs)/home");
     } catch (error) {
       console.error("Error saving event:", error);
@@ -86,6 +97,7 @@ const CreateEvent = () => {
           <Ionicons name="close-outline" size={24} color="gray" />
         </TouchableOpacity>
 
+        {/* ✅ Image Upload */}
         <TouchableOpacity style={styles.imageUpload} onPress={pickImage}>
           {imageUri ? (
             <Image source={{ uri: imageUri }} style={styles.uploadedImage} />
@@ -98,48 +110,35 @@ const CreateEvent = () => {
         <Text style={styles.label}>Title</Text>
         <TextInput style={styles.input} placeholder="Event Name" value={title} onChangeText={setTitle} />
 
-        {/* Date Picker */}
+        {/* ✅ Date Picker */}
         <Text style={styles.label}>Event Date</Text>
-        <TouchableOpacity style={styles.datePicker} onPress={openDatePicker }>
+        <TouchableOpacity style={styles.datePicker} onPress={openDatePicker}>
           <Text style={styles.dateText}>{date.toDateString()}</Text>
         </TouchableOpacity>
-
-        {/* ✅ Fix for Date Picker Display on iOS & Android */}
-        {showDatePicker && Platform.OS === "ios" && (
-          <Modal transparent={true} animationType="slide">
-            <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-              <DateTimePicker
-                  value={date}
-                  mode="date"
-                  display="spinner"
-                  onChange={onDateChange}
-                  textColor="black" 
-
-                />
-                <TouchableOpacity style={styles.closeModalButton} onPress={() => setShowDatePicker(false)}>
-                  <Text style={styles.closeModalText}>Done</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
+        {showDatePicker && (
+          <DateTimePicker value={date} mode="date" display={Platform.OS === "ios" ? "spinner" : "default"} onChange={onDateChange} textColor="black"/>
         )}
 
-        {showDatePicker && Platform.OS === "android" && (
-          <DateTimePicker
-            value={date}
-            mode="date"
-            display="default"
-            onChange={onDateChange}
-          />
+        {/* ✅ Time Picker */}
+        <Text style={styles.label}>Event Time</Text>
+        <TouchableOpacity style={styles.datePicker} onPress={openTimePicker}>
+          <Text style={styles.dateText}>{time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</Text>
+        </TouchableOpacity>
+        {showTimePicker && (
+          <DateTimePicker value={time} mode="time" display={Platform.OS === "ios" ? "spinner" : "default"} onChange={onTimeChange} textColor="black"/>
         )}
 
-        {/* Other Fields */}
+        {/* Event Description */}
         <Text style={styles.label}>About</Text>
         <TextInput style={styles.input} placeholder="Describe your event" value={about} onChangeText={setAbout} />
 
+        {/* Event Address */}
         <Text style={styles.label}>Address</Text>
         <TextInput style={styles.input} placeholder="Event Address" value={address} onChangeText={setAddress} />
+
+        {/* ✅ Requirements Input */}
+        <Text style={styles.label}>Requirements</Text>
+        <TextInput style={styles.input} placeholder="Any restrictions (optional)" value={requirements} onChangeText={setRequirements} />
 
         {/* Share Button */}
         <TouchableOpacity style={styles.shareButton} onPress={handleShareEvent}>
@@ -163,10 +162,6 @@ const styles = StyleSheet.create({
   dateText: { fontSize: 16, color: "#3F587D" },
   shareButton: { backgroundColor: "#3F587D", paddingVertical: 12, borderRadius: 5, alignItems: "center" },
   shareText: { color: "white", fontSize: 18, fontWeight: "bold" },
-  modalContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0.5)" },
-  modalContent: { backgroundColor: "white", padding: 20, borderRadius: 10, alignItems: "center" },
-  closeModalButton: { marginTop: 10, padding: 10, backgroundColor: "#3F587D", borderRadius: 5 },
-  closeModalText: { color: "white", fontWeight: "bold" },
 });
 
 export default CreateEvent;

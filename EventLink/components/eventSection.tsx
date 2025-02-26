@@ -48,7 +48,23 @@ const EventSection: React.FC<EventSectionProps> = ({ refreshTrigger, userName })
           data={events}
           keyExtractor={(item, index) => index.toString()}
           renderItem={({ item }) => (
-            <View style={styles.eventCard}>
+            <TouchableOpacity
+              style={styles.eventCard}
+              onPress={() =>
+                router.push({
+                  pathname: "/event",
+                  params: { 
+                    title: item.title, 
+                    about: item.about, 
+                    address: item.address, 
+                    requirements: item.requirements, 
+                    imageUri: typeof item.imageUri === "string" ? item.imageUri : item.imageUri?.[0] || "",
+                    date: typeof item.date === "string" ? item.date : item.date?.[0] || "",
+                    creator: item.creator
+                  },
+                })
+              }
+            >
               {/* Event Image or Placeholder */}
               {item.imageUri ? (
                 <Image source={{ uri: item.imageUri }} style={styles.eventImage} />
@@ -71,17 +87,25 @@ const EventSection: React.FC<EventSectionProps> = ({ refreshTrigger, userName })
               {userName === item.creator && (
                 <TouchableOpacity
                   style={styles.editIcon}
-                  onPress={() =>
+                  onPress={(e) => {
+                    e.stopPropagation(); // Prevents navigation when pressing edit
                     router.push({
                       pathname: "/(tabs)/create",
-                      params: { title: item.title },
-                    })
-                  }
+                      params: { 
+                        title: item.title, 
+                        about: item.about, 
+                        address: item.address, 
+                        requirements: item.requirements, 
+                        imageUri: typeof item.imageUri === "string" ? item.imageUri : item.imageUri?.[0] || "",
+                        date: typeof item.date === "string" ? item.date : item.date?.[0] || "",
+                      },
+                    });
+                  }}
                 >
                   <Ionicons name="create-outline" size={24} color="#3F587D" />
                 </TouchableOpacity>
               )}
-            </View>
+            </TouchableOpacity>
           )}
         />
       ) : (
