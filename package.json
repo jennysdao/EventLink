@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@expo/vector-icons": "^14.0.4",
+    "nativewind": "^4.1.23"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.3.2"
+  }
+}
