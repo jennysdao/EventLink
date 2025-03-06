@@ -32,19 +32,23 @@ const Home = () => {
     }
   };
 
-  // ✅ Handle pull-to-refresh
-  const onRefresh = async () => {
+   // ✅ Refresh Function (Pull-to-Refresh)
+   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchUserData(); // ✅ Fetch user and school data
+    setRefreshTrigger((prev) => !prev); // ✅ Toggle refresh state
     setRefreshing(false);
   };
 
-  // ✅ Fetch data when screen is focused
+  // ✅ Auto-refresh when screen is revisited
   useFocusEffect(
     useCallback(() => {
-      fetchUserData();
+      setRefreshTrigger((prev) => !prev); // ✅ Triggers refresh
     }, [])
   );
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
 
   return (
     <ScrollView

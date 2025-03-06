@@ -41,7 +41,7 @@ const EventSection: React.FC<EventSectionProps> = ({ refreshTrigger, userName })
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Going on Today</Text>
+      <Text style={styles.sectionTitle}>Going on Near You</Text>
 
       {events.length > 0 ? (
         <FlatList

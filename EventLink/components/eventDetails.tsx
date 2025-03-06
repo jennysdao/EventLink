@@ -3,6 +3,18 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } fr
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
+
+const EventDetails = () => {
+  const { title } = useLocalSearchParams();
+
+  return (
+    <View>
+      <Text>Event: {title}</Text>
+    </View>
+  );
+};
+
 
 // ✅ Define Props Type
 interface EventDetailsProps {
