@@ -10,7 +10,9 @@ interface User {
   email: string;
   password: string;
   name: string;
+  profilePicture?: string; // New profile picture field
 }
+
 
 interface FormFieldProps {
   email: string;

@@ -1,156 +1,116 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-interface User {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-}
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 const SignUpForm = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
-  const [users, setUsers] = useState<User[]>([]);
-
+  const [selectedSchool, setSelectedSchool] = useState("");
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const router = useRouter();
 
-  // Load users from AsyncStorage when the component mounts
-  useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        const storedUsers = await AsyncStorage.getItem("users");
-        if (storedUsers) {
-          setUsers(JSON.parse(storedUsers));
-        }
-      } catch (error) {
-        console.error("Error loading users:", error);
-      }
-    };
-    loadUsers();
-  }, []);
+  // ✅ Handle Profile Picture Selection
+  const pickProfilePicture = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1], // Square aspect ratio
+      quality: 1,
+    });
 
-  const handleSignUp = async () => {
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      Alert.alert("Error", "Please fill in all fields.");
-      return;
+    if (!result.canceled) {
+      setProfilePicture(result.assets[0].uri);
     }
-
-    if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match.");
-      return;
-    }
-
-    const lowerCaseEmail = email.toLowerCase();
-
-    const userExists = users.find((user) => user.email === lowerCaseEmail);
-    if (userExists) {
-      Alert.alert("Error", "Email already in use.");
-      return;
-    }
-
-    // Create a new user and add to local storage
-    const newUser: User = {
-      id: users.length + 1,
-      firstName,
-      lastName,
-      email: lowerCaseEmail, // Store email in lowercase
-      password,
-    };
-
-    const updatedUsers = [...users, newUser];
-    setUsers(updatedUsers);
-    await AsyncStorage.setItem("users", JSON.stringify(updatedUsers));
-
-    Alert.alert("Success", "Account created successfully!", [
-      { text: "OK", onPress: () => router.push("/(auth)/sign-in") },
-    ]);
   };
+
+  // ✅ Handle Sign Up
+  const handleSignUp = async () => {
+    if (!firstName || !lastName || !email || !password) {
+      Alert.alert("Error", "Please fill in all required fields.");
+      return;
+    }
+  
+    try {
+      // ✅ Retrieve stored users
+      const storedUsers = await AsyncStorage.getItem("users");
+      const usersList = storedUsers ? JSON.parse(storedUsers) : [];
+  
+      const lowerCaseEmail = email.toLowerCase(); // Ensure consistency
+  
+      // ✅ Check if the email is already registered
+      if (usersList.some((user: any) => user.email === lowerCaseEmail)) {
+        Alert.alert("Error", "An account with this email already exists.");
+        return;
+      }
+  
+      // ✅ Create new user object
+      const newUser = {
+        id: lowerCaseEmail, // ✅ Use email as user ID
+        firstName,
+        lastName,
+        email: lowerCaseEmail, // Store email in lowercase for consistency
+        password,
+        selectedSchool, // ✅ Ensure school is included
+        profilePicture: profilePicture || null, // Optional profile picture
+      };
+  
+      // ✅ Store new user in AsyncStorage
+      usersList.push(newUser);
+      await AsyncStorage.setItem("users", JSON.stringify(usersList));
+  
+      Alert.alert("Success", "Account created successfully!");
+      router.push("/(auth)/sign-in"); // ✅ Navigate to sign-in screen after success
+    } catch (error) {
+      console.error("Error signing up:", error);
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    }
+  };
+  
 
   return (
     <View style={styles.formContainer}>
-      {/* First Name & Last Name - Side by Side */}
-      <View style={styles.nameContainer}>
-        <View style={styles.inputWrapper}>
-          <Text style={styles.label}>First Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="First Name"
-            placeholderTextColor="#A9A9A9"
-            value={firstName}
-            onChangeText={setFirstName}
-          />
+      {/* ✅ Profile Picture Selection */}
+      <TouchableOpacity onPress={pickProfilePicture} style={styles.profileImageContainer}>
+      <View style={styles.editIconContainer}>
+          <Ionicons name="camera-outline" size={20} color="white" />
         </View>
+        {profilePicture ? (
+          <Image source={{ uri: profilePicture }} style={styles.profileImage} />
+        ) : (
+          <Ionicons name="person-circle-outline" size={100} color="#A9A9A9" />
+        )}
 
-        <View style={styles.inputWrapper}>
-          <Text style={styles.label}>Last Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Last Name"
-            placeholderTextColor="#A9A9A9"
-            value={lastName}
-            onChangeText={setLastName}
-          />
-        </View>
-      </View>
+        {/* ✅ Edit Icon Overlay */}
+       
+      </TouchableOpacity>
+
+      {/* First Name */}
+      <Text style={styles.label}>First Name</Text>
+      <TextInput style={styles.input} placeholder="Enter First Name" value={firstName} onChangeText={setFirstName} />
+
+      {/* Last Name */}
+      <Text style={styles.label}>Last Name</Text>
+      <TextInput style={styles.input} placeholder="Enter Last Name" value={lastName} onChangeText={setLastName} />
 
       {/* Email */}
       <Text style={styles.label}>Email</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter E-mail"
-        placeholderTextColor="#A9A9A9"
-        value={email}
-        onChangeText={setEmail}
-      />
+      <TextInput style={styles.input} placeholder="Enter Email" value={email} onChangeText={setEmail} />
 
       {/* Password */}
       <Text style={styles.label}>Password</Text>
-      <View style={styles.passwordContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Password"
-          placeholderTextColor="#A9A9A9"
-          secureTextEntry={!isPasswordVisible}
-          value={password}
-          onChangeText={setPassword}
-        />
-        <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)} style={styles.eyeIcon}>
-          <Ionicons name={isPasswordVisible ? "eye-off-outline" : "eye-outline"} size={20} color="white" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Confirm Password */}
-      <Text style={styles.label}>Confirm Password</Text>
-      <View style={styles.passwordContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Re-enter Password"
-          placeholderTextColor="#A9A9A9"
-          secureTextEntry={!isConfirmPasswordVisible}
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-        />
-        <TouchableOpacity onPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)} style={styles.eyeIcon}>
-          <Ionicons name={isConfirmPasswordVisible ? "eye-off-outline" : "eye-outline"} size={20} color="white" />
-        </TouchableOpacity>
-      </View>
+      <TextInput style={styles.input} placeholder="Enter Password" secureTextEntry value={password} onChangeText={setPassword} />
 
       {/* Sign Up Button */}
       <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
-        <Text style={styles.signUpButtonText}>Sign Up</Text>
+        <Text style={styles.signUpText}>Sign Up</Text>
       </TouchableOpacity>
 
-      {/* Already Have an Account? Go to Sign In */}
+      {/* Already have an account? */}
       <View style={styles.signInContainer}>
         <Text style={styles.signInText}>Already have an account?</Text>
         <TouchableOpacity onPress={() => router.push("/(auth)/sign-in")}>
@@ -174,13 +134,26 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 5,
   },
-  nameContainer: {
-    flexDirection: "row", // ✅ Align inputs side by side
-    justifyContent: "space-between",
+  profileImageContainer: {
+    alignSelf: "center",
+    marginBottom: 30,
+    position: "relative",
   },
-  inputWrapper: {
-    flex: 1, // ✅ Allows equal spacing
-    marginRight: 10, // Adds spacing between first and last name
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  editIconContainer: {
+    position: "absolute",
+    bottom: -25,
+    right: 35,
+    backgroundColor: "#3F587D",
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
   },
   label: {
     fontSize: 14,
@@ -198,23 +171,14 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     color: "white",
   },
-  passwordContainer: {
-    position: "relative",
-    width: "100%",
-  },
-  eyeIcon: {
-    position: "absolute",
-    right: 10,
-    top: 12,
-  },
   signUpButton: {
-    backgroundColor: "#1f2c40",
+    backgroundColor: "#3F587D",
     paddingVertical: 12,
     borderRadius: 5,
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 1,
   },
-  signUpButtonText: {
+  signUpText: {
     color: "white",
     fontSize: 18,
     fontWeight: "bold",

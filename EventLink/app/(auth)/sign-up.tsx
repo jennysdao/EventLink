@@ -2,7 +2,7 @@ import { View, Text, ScrollView, StyleSheet, Dimensions, Image } from "react-nat
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import images from "../../constants/images";
-import SignUpForm from "../../components/signUpForm"; // ✅ Import SignUpForm component
+import SignUpForm from "../../components/signUpForm"; // ✅ Import updated SignUpForm component
 
 const { width, height } = Dimensions.get("window");
 
@@ -17,7 +17,7 @@ const SignUp = () => {
         {/* Title */}
         <Text style={styles.title}>Welcome to EventLink!</Text>
 
-        {/* Sign Up Form */}
+        {/* Sign Up Form (Now with Profile Picture Upload) */}
         <SignUpForm />
       </ScrollView>
     </SafeAreaView>
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    fontSize: 40,
+    fontSize: 30,
     fontWeight: "bold",
     color: "white",
     marginBottom: 40,

@@ -32,6 +32,16 @@ const Home = () => {
     }
   };
 
+  const handleSearch = (query: string) => {
+    if (query.trim() !== "") {
+      router.push({
+        pathname: "../search/searchQuery",
+        params: { query },
+      });
+    }
+  };
+  
+
    // ✅ Refresh Function (Pull-to-Refresh)
    const onRefresh = async () => {
     setRefreshing(true);
@@ -61,7 +71,13 @@ const Home = () => {
       {/* Overlay Section */}
       <View style={styles.overlay}>
         <Greeting userName={userName} selectedSchool={selectedSchool} />
-        <SearchBar />
+        <SearchBar onSearch={(query) => {
+          router.push({
+            pathname: "../search/searchQuery",
+            params: { query },  // Pass query to search screen
+          });
+        }} />
+
 
         {/* Change School Button */}
         <TouchableOpacity onPress={() => router.push("/(auth)/school-select")} style={styles.changeSchoolContainer}>

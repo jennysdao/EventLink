@@ -90,7 +90,7 @@ const EventSection: React.FC<EventSectionProps> = ({ refreshTrigger, userName })
                   onPress={(e) => {
                     e.stopPropagation(); // Prevents navigation when pressing edit
                     router.push({
-                      pathname: "/(tabs)/create",
+                      pathname: "/updateEvent",
                       params: { 
                         title: item.title, 
                         about: item.about, 
