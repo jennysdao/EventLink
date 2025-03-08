@@ -36,40 +36,34 @@ const SignUpForm = () => {
     }
   
     try {
-      // ✅ Retrieve stored users
       const storedUsers = await AsyncStorage.getItem("users");
+      const storedSchool = await AsyncStorage.getItem("selectedSchool"); // ✅ Retrieve last stored school
       const usersList = storedUsers ? JSON.parse(storedUsers) : [];
   
-      const lowerCaseEmail = email.toLowerCase(); // Ensure consistency
-  
-      // ✅ Check if the email is already registered
-      if (usersList.some((user: any) => user.email === lowerCaseEmail)) {
-        Alert.alert("Error", "An account with this email already exists.");
-        return;
-      }
-  
-      // ✅ Create new user object
+      // Assign selected school to user
       const newUser = {
-        id: lowerCaseEmail, // ✅ Use email as user ID
+        id: email.toLowerCase(), // ✅ Use email as unique ID
         firstName,
         lastName,
-        email: lowerCaseEmail, // Store email in lowercase for consistency
+        email: email.toLowerCase(),
         password,
-        selectedSchool, // ✅ Ensure school is included
-        profilePicture: profilePicture || null, // Optional profile picture
+        profilePicture: null, // Can be updated later
+        selectedSchool: storedSchool || "No School Selected", // ✅ Assign school
       };
   
-      // ✅ Store new user in AsyncStorage
       usersList.push(newUser);
       await AsyncStorage.setItem("users", JSON.stringify(usersList));
   
+      console.log("✅ New User Created:", newUser);
+  
       Alert.alert("Success", "Account created successfully!");
-      router.push("/(auth)/sign-in"); // ✅ Navigate to sign-in screen after success
+      router.push("/(auth)/sign-in"); // Navigate to sign-in screen after success
     } catch (error) {
-      console.error("Error signing up:", error);
+      console.error("❌ Error signing up:", error);
       Alert.alert("Error", "Something went wrong. Please try again.");
     }
   };
+  
   
 
   return (

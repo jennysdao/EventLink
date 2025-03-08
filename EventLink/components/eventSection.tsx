@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-// ✅ Define the Event Type
+//  Define the Event Type
 interface Event {
   title: string;
   date: string;
@@ -13,11 +13,12 @@ interface Event {
   requirements?: string;
   imageUri?: string;
   creator: string;
+  school: string;
 }
 
 interface EventSectionProps {
-  refreshTrigger?: boolean; // ✅ Receives a trigger from Home.tsx
-  userName: string; // ✅ Receive the current logged-in user
+  refreshTrigger?: boolean; //  Receives a trigger from Home.tsx
+  userName: string; //  Receive the current logged-in user
 }
 
 const EventSection: React.FC<EventSectionProps> = ({ refreshTrigger, userName }) => {
@@ -27,16 +28,25 @@ const EventSection: React.FC<EventSectionProps> = ({ refreshTrigger, userName })
   const fetchEvents = async () => {
     try {
       const storedEvents = await AsyncStorage.getItem("events");
-      if (storedEvents) {
-        setEvents(JSON.parse(storedEvents));
+      const storedUsers = await AsyncStorage.getItem("users");
+  
+      if (storedEvents && storedUsers) {
+        const events = JSON.parse(storedEvents);
+        const users = JSON.parse(storedUsers);
+        const latestUser = users[users.length - 1];
+  
+        //  Filter events based on the selected school of the user
+        const filteredEvents = events.filter((event: any) => event.school === latestUser.selectedSchool);
+  
+        setEvents(filteredEvents);
       }
     } catch (error) {
       console.error("Error fetching events:", error);
     }
   };
-
+  
   useEffect(() => {
-    fetchEvents(); // ✅ Re-fetch whenever refreshTrigger changes
+    fetchEvents();
   }, [refreshTrigger]);
 
   return (
@@ -83,7 +93,7 @@ const EventSection: React.FC<EventSectionProps> = ({ refreshTrigger, userName })
                 <Text style={styles.eventCreator}>Hosted by {item.creator}</Text>
               </View>
 
-              {/* ✅ Show Edit Icon if the Logged-in User is the Creator */}
+              {/*  Show Edit Icon if the Logged-in User is the Creator */}
               {userName === item.creator && (
                 <TouchableOpacity
                   style={styles.editIcon}
@@ -127,7 +137,7 @@ const styles = StyleSheet.create({
     marginBottom: 15, 
     flexDirection: "row", 
     alignItems: "center",
-    justifyContent: "space-between" // ✅ Aligns edit icon correctly
+    justifyContent: "space-between" //  Aligns edit icon correctly
   },
   eventDate: {
     fontSize: 14,
@@ -151,7 +161,7 @@ const styles = StyleSheet.create({
   eventDescription: { fontSize: 14, color: "#3F587D", marginTop: 2 },
   eventAddress: { fontSize: 12, color: "#3F587D", marginTop: 2, fontStyle: "italic" },
   eventCreator: { fontSize: 12, color: "#3F587D", fontStyle: "italic", marginTop: 2 },
-  editIcon: { padding: 10 }, // ✅ Edit icon styling
+  editIcon: { padding: 10 }, //  Edit icon styling
   noEventsContainer: { 
     height: 100, 
     backgroundColor: "#D0D9E8", 

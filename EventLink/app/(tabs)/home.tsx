@@ -8,6 +8,17 @@ import SearchBar from "../../components/searchBar";
 import Greeting from "../../components/greeting";
 import EventSection from "../../components/eventSection";
 
+const clearAsyncStorage = async () => {
+  try {
+    await AsyncStorage.clear();
+    console.log("AsyncStorage cleared successfully!");
+  } catch (error) {
+    console.error("Error clearing AsyncStorage:", error);
+  }
+};
+
+// Call this function whenever you need to clear the storage
+
 const Home = () => {
   const [userName, setUserName] = useState("User");
   const [selectedSchool, setSelectedSchool] = useState("Select a school");
@@ -15,7 +26,7 @@ const Home = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(false);
   const router = useRouter();
 
-  // ✅ Fetch user & school data
+  //  Fetch user & school data
   const fetchUserData = async () => {
     try {
       const storedSchool = await AsyncStorage.getItem("selectedSchool");
@@ -42,22 +53,35 @@ const Home = () => {
   };
   
 
-   // ✅ Refresh Function (Pull-to-Refresh)
+   //  Refresh Function (Pull-to-Refresh)
    const onRefresh = async () => {
     setRefreshing(true);
-    setRefreshTrigger((prev) => !prev); // ✅ Toggle refresh state
+    setRefreshTrigger((prev) => !prev); //  Toggle refresh state
     setRefreshing(false);
   };
 
-  // ✅ Auto-refresh when screen is revisited
+  //  Auto-refresh when screen is revisited
   useFocusEffect(
     useCallback(() => {
-      setRefreshTrigger((prev) => !prev); // ✅ Triggers refresh
+      setRefreshTrigger((prev) => !prev); //  Triggers refresh
     }, [])
   );
 
+  const debugStorage = async () => {
+    try {
+      const storedUsers = await AsyncStorage.getItem("users");
+      const storedSchool = await AsyncStorage.getItem("selectedSchool");
+      console.log("🔎 Debugging AsyncStorage:");
+      console.log("👤 Stored Users:", storedUsers ? JSON.parse(storedUsers) : "None");
+      console.log("🎓 Stored Selected School:", storedSchool);
+    } catch (error) {
+      console.error("Error debugging storage:", error);
+    }
+  };
+
   useEffect(() => {
     fetchUserData();
+    debugStorage();
   }, []);
 
   return (

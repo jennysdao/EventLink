@@ -18,20 +18,16 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
   return (
     <View style={styles.searchContainer}>
-      <Ionicons name="search" size={20} color="gray" />
+      <Ionicons name="search-outline" size={20} color="#748BAB" style={styles.icon} />
       <TextInput
         style={styles.input}
-        placeholder="Search events..."
+        placeholder="Find events going on near you"
+        placeholderTextColor="#A9B8D1"
         value={searchText}
         onChangeText={setSearchText}
-        onSubmitEditing={handleSearchSubmit} // Only triggers search on return/enter key press
-        returnKeyType="search" // Sets keyboard return button to "Search"
+        returnKeyType="search"
+        onSubmitEditing={handleSearchSubmit} // ✅ Search when user presses "Enter"
       />
-      {searchText.length > 0 && (
-        <TouchableOpacity onPress={() => setSearchText("")}>
-          <Ionicons name="close" size={20} color="gray" />
-        </TouchableOpacity>
-      )}
     </View>
   );
 };
@@ -40,16 +36,20 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#E0E7F3",
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    marginVertical: 10,
+    backgroundColor: "white", // ✅ Light blue background
+    borderRadius: 25, // ✅ Fully rounded edges
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    width: "100%",
+    marginTop: 10,
+  },
+  icon: {
+    marginRight: 10,
   },
   input: {
     flex: 1,
-    padding: 8,
     fontSize: 16,
-    color: "#333",
+    color: "#3F587D", // ✅ Darker text for better contrast
   },
 });
 

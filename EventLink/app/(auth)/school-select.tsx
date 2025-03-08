@@ -13,8 +13,8 @@ const SchoolSelection = () => {
   const searchBarRef = useRef<View>(null);
   const router = useRouter();
 
-  // ✅ Static list with only 1 school for now
-  const universityList = ["University of California Riverside"];
+  //  Static list with only 1 school for now
+  const universityList = ["University of California Riverside", "University of California Berkeley"];
 
   const handleSearch = (text: string) => {
     setSearch(text);
@@ -30,7 +30,7 @@ const SchoolSelection = () => {
   const handleContinue = async () => {
     if (selectedSchool) {
       await AsyncStorage.setItem("selectedSchool", selectedSchool);
-      router.push("/(tabs)/home"); // ✅ Navigate to home after selection
+      router.push("/(tabs)/home"); //  Navigate to home after selection
     } else {
       Alert.alert("Error", "Please select a school before continuing.");
     }
@@ -52,7 +52,7 @@ const SchoolSelection = () => {
           ref={searchBarRef}
           onLayout={(event) => {
             const { y, height } = event.nativeEvent.layout;
-            setDropdownTop(y + height + 5); // ✅ Dynamically set dropdown position
+            setDropdownTop(y + height + 5); //  Dynamically set dropdown position
           }}
         >
           <Ionicons name="search-outline" size={20} color="gray" style={styles.searchIcon} />

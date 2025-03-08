@@ -1,8 +1,9 @@
-import { View, Text, StyleSheet } from 'react-native';
-import {Tabs, Redirect} from 'expo-router'
-import React from 'react'
-import {Image} from "react-native";
+import { View, Text, StyleSheet, BackHandler } from 'react-native';
+import { Tabs } from 'expo-router';
+import React, { useEffect, useCallback } from 'react';
+import { Image } from "react-native";
 import icons from '../../constants/icons';
+import { useFocusEffect } from '@react-navigation/native';
 
 interface TabIconProps {
   icon: any; 
@@ -16,7 +17,7 @@ const TabIcon: React.FC<TabIconProps> = ({ icon, color, name, focused }) => {
     <View>
       <Image
         source={icon}
-        style={{ width: 20, height: 20, marginLeft: 3, marginTop: 20}}
+        style={{ width: 20, height: 20, marginLeft: 3, marginTop: 20 }}
         resizeMode="contain"
         tintColor={color}
       />
@@ -24,78 +25,69 @@ const TabIcon: React.FC<TabIconProps> = ({ icon, color, name, focused }) => {
         {name}
       </Text>
     </View>
-  )
-}
+  );
+};
 
 const TabsLayout = () => {
+  // Disable back navigation when inside tabs
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => true; // Prevents going back
+      BackHandler.addEventListener("hardwareBackPress", onBackPress);
+      return () => BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+    }, [])
+  );
+
   return (
     <>
-    <Tabs
-      screenOptions={{
-        tabBarShowLabel: false,
-        tabBarActiveTintColor: '#FFFF',
-        tabBarInactiveTintColor: '#90949A',
-        tabBarStyle: {
-          backgroundColor: '#393E44',
-          borderTopWidth: 1,
-          height: 90,
-        }
-
-      }}
+      <Tabs
+        screenOptions={{
+          tabBarShowLabel: false,
+          tabBarActiveTintColor: '#FFFF',
+          tabBarInactiveTintColor: '#90949A',
+          tabBarStyle: {
+            backgroundColor: '#393E44',
+            borderTopWidth: 1,
+            height: 90,
+          },
+        }}
       >
-      <Tabs.Screen
-      name = "home"
-      options= {{
-        title: 'Home',
-        headerShown: false,
-        tabBarIcon: ({ color, focused}) => (
-          <TabIcon
-          icon = {icons.home}
-          color = {color}
-          name="Home"
-          focused={focused}
-          />
-        )
-      }}
-      />
+        <Tabs.Screen
+          name="home"
+          options={{
+            title: 'Home',
+            headerShown: false,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon icon={icons.home} color={color} name="Home" focused={focused} />
+            ),
+          }}
+        />
 
-    <Tabs.Screen
-      name = "create"
-      options= {{
-        title: 'Create',
-        headerShown: false,
-        tabBarIcon: ({ color, focused}) => (
-          <TabIcon
-          icon = {icons.create}
-          color = {color}
-          name="Create"
-          focused={focused}
-          />
-        )
-      }}
-      />
+        <Tabs.Screen
+          name="create"
+          options={{
+            title: "Create",
+            headerShown: false,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon icon={icons.create} color={color} name="Create" focused={focused} />
+            ),
+          }}
+        />
 
-    <Tabs.Screen
-      name = "profile"
-      options= {{
-        title: 'Profile',
-        headerShown: false,
-        tabBarIcon: ({ color, focused}) => (
-          <TabIcon
-          icon = {icons.user}
-          color = {color}
-          name="Profile"
-          focused={focused}
-          />
-        )
-      }}
-      />
-
-
-    </Tabs>
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: 'Profile',
+            headerShown: false,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon icon={icons.user} color={color} name="Profile" focused={focused} />
+            ),
+          }}
+        />
+      </Tabs>
     </>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -116,4 +108,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TabsLayout
+export default TabsLayout;

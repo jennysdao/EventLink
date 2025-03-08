@@ -13,6 +13,7 @@ const EventDetails = () => {
       address={params.address as string}
       requirements={params.requirements as string}
       imageUri={params.imageUri as string}
+      school={[params.school as string]}
     />
   );
 };

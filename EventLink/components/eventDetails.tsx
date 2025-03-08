@@ -2,162 +2,102 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
+import AttendeeToggle from "../components/RSVPUserList"; // Import the new component
 
-const EventDetails = () => {
-  const params = useLocalSearchParams();
+
+interface EventProps {
+  title: string;
+  date: string;
+  about: string;
+  address: string;
+  requirements?: string;
+  imageUri?: string;
+}
+
+const EventDetailsComponent: React.FC<EventProps> = ({ title, date, about, address, requirements, imageUri }) => {
   const router = useRouter();
-  const { title, date, about, address, requirements, imageUri, creator } = params;
-  const [currentUser, setCurrentUser] = useState("");
-  const [isOwner, setIsOwner] = useState(false);
   const [isRsvped, setIsRsvped] = useState(false);
-  const [user, setUser] = useState<{ firstName: string; lastName: string; email: string; profilePicture?: string } | null>(null);
 
-  useEffect(() => {
-    fetchCurrentUser();
-  }, []);
-  
-  const fetchCurrentUser = async () => {
-    try {
-      const storedUsers = await AsyncStorage.getItem("users");
-      if (storedUsers) {
-        const users = JSON.parse(storedUsers);
-        const latestUser = users[users.length - 1]; //  Get the latest logged-in user
-        setUser(latestUser);
-      }
-    } catch (error) {
-      console.error("Error fetching user:", error);
-    }
-  };
-
-  const checkIfRsvped = async () => {
-    try {
-      const storedUsers = await AsyncStorage.getItem("users");
-      const storedRsvpEvents = await AsyncStorage.getItem("rsvpEvents");
-  
-      console.log("🔍 Checking RSVP status...");
-  
-      if (storedUsers && storedRsvpEvents) {
-        const users = JSON.parse(storedUsers);
-        const latestUser = users[users.length - 1]; // Get current user
-        const userEmail = latestUser.email;
-  
-        console.log(`👤 Current User: ${userEmail}`);
-  
-        const rsvpData = JSON.parse(storedRsvpEvents);
-        console.log("📁 Stored RSVP Events:", rsvpData);
-  
-        const userRsvpEvents = rsvpData[userEmail] || [];
-        console.log(` ${userEmail}'s RSVP'd Events:`, userRsvpEvents);
-  
-        const isUserRsvped = userRsvpEvents.some((event: any) => event.title === title);
-        console.log(`❓ Is User RSVP'd?: ${isUserRsvped}`);
-  
-        setIsRsvped(isUserRsvped);
-      }
-    } catch (error) {
-      console.error("⚠️ Error checking RSVP status:", error);
-    }
-  };
-  
-  //  Run `checkIfRsvped()` on load
   useEffect(() => {
     checkIfRsvped();
   }, []);
-  
 
-  //  Handle RSVP
-const handleRSVP = async () => {
-  try {
-    const storedUsers = await AsyncStorage.getItem("users");
-    const storedRsvpEvents = await AsyncStorage.getItem("rsvpEvents");
-
-    if (storedUsers) {
-      const users = JSON.parse(storedUsers);
-      const latestUser = users[users.length - 1]; // Get current user
-      const userEmail = latestUser.email;
-
-      let rsvpData = storedRsvpEvents ? JSON.parse(storedRsvpEvents) : {};
-
-      // If user doesn't have RSVP events, create a new array
-      if (!rsvpData[userEmail]) {
-        rsvpData[userEmail] = [];
+  const checkIfRsvped = async () => {
+    try {
+      const storedRsvpEvents = await AsyncStorage.getItem("rsvpEvents");
+      if (storedRsvpEvents) {
+        const rsvpEvents = JSON.parse(storedRsvpEvents);
+        const alreadyRsvped = rsvpEvents.some((event: { title: string }) => event.title === title);
+        setIsRsvped(alreadyRsvped);
       }
+    } catch (error) {
+      console.error("Error checking RSVP status:", error);
+    }
+  };
 
-      // Check if event is already RSVP'd
-      if (!rsvpData[userEmail].some((event: any) => event.title === title)) {
-        rsvpData[userEmail].push({
-          title,
-          date,
-          about,
-          address,
-          requirements,
-          imageUri,
-        });
+  const handleRSVP = async () => {
+    try {
+      const storedRsvpEvents = await AsyncStorage.getItem("rsvpEvents");
+      let rsvpEvents = storedRsvpEvents ? JSON.parse(storedRsvpEvents) : [];
 
-        await AsyncStorage.setItem("rsvpEvents", JSON.stringify(rsvpData));
+      if (!rsvpEvents.some((event: { title: string }) => event.title === title)) {
+        const newEvent = { title, date, about, address, requirements, imageUri };
+        rsvpEvents.push(newEvent);
+        await AsyncStorage.setItem("rsvpEvents", JSON.stringify(rsvpEvents));
 
         setIsRsvped(true);
         Alert.alert("Success", "You have RSVP'd for this event!");
       }
+    } catch (error) {
+      console.error("Error saving RSVP:", error);
     }
-  } catch (error) {
-    console.error("Error saving RSVP:", error);
-  }
-};
+  };
 
-//  Handle Un-RSVP
-const handleUnRSVP = async () => {
-  try {
-    const storedUsers = await AsyncStorage.getItem("users");
-    const storedRsvpEvents = await AsyncStorage.getItem("rsvpEvents");
-
-    if (storedUsers && storedRsvpEvents) {
-      const users = JSON.parse(storedUsers);
-      const latestUser = users[users.length - 1]; // Get current user
-      const userEmail = latestUser.email;
-
-      let rsvpData = JSON.parse(storedRsvpEvents);
-
-      // Remove event from RSVP list
-      if (rsvpData[userEmail]) {
-        rsvpData[userEmail] = rsvpData[userEmail].filter((event: any) => event.title !== title);
+  const handleUnRSVP = async () => {
+    try {
+      const storedRsvpEvents = await AsyncStorage.getItem("rsvpEvents");
+      let rsvpEvents = storedRsvpEvents ? JSON.parse(storedRsvpEvents) : [];
+  
+      // ✅ Remove the event from RSVP list
+      rsvpEvents = rsvpEvents.filter((event: any) => event.title !== title);
+      await AsyncStorage.setItem("rsvpEvents", JSON.stringify(rsvpEvents));
+      
+      // ✅ Remove user from attendee list
+      const storedAttendees = await AsyncStorage.getItem(`attendees_${title}`);
+      if (storedAttendees) {
+        let attendeesList = JSON.parse(storedAttendees);
+        const storedUsers = await AsyncStorage.getItem("users");
+        if (storedUsers) {
+          const users = JSON.parse(storedUsers);
+          const latestUser = users[users.length - 1];
+          const profilePicture = latestUser.profilePicture || null;
+  
+          // Remove user from attendees
+          attendeesList = attendeesList.filter((attendee: string) => attendee !== profilePicture);
+          await AsyncStorage.setItem(`attendees_${title}`, JSON.stringify(attendeesList));
+        }
       }
-
-      await AsyncStorage.setItem("rsvpEvents", JSON.stringify(rsvpData));
-
-      setIsRsvped(false);
-      Alert.alert("Removed", "You have un-RSVP'd from this event.");
+  
+      setIsRsvped(false); // ✅ Update state
+    } catch (error) {
+      console.error("Error handling un-RSVP:", error);
     }
-  } catch (error) {
-    console.error("Error removing RSVP:", error);
-  }
-};
-
+  };
   
-  //  Call check function in useEffect
-  useEffect(() => {
-    checkIfRsvped();
-  }, [user]);
-  
-  
-  
-  
-
 
   return (
     <ScrollView style={styles.container}>
-    <Image 
-      source={{ uri: Array.isArray(imageUri) ? imageUri[0] : imageUri || "" }} 
-      style={styles.eventImage} 
-    />
+      <Image source={{ uri: imageUri }} style={styles.eventImage} />
+
       <TouchableOpacity style={styles.backIcon} onPress={() => router.back()}>
         <Ionicons name="close-outline" size={30} color="white" />
       </TouchableOpacity>
 
       <View style={styles.detailsContainer}>
         <Text style={styles.title}>{title}</Text>
-        <Text style={styles.date}>{date ? new Date(String(date)).toDateString() : "No Date Available"}</Text>
+        <Text style={styles.date}>{date ? new Date(date).toDateString() : "No Date Available"}</Text>
 
         <Text style={styles.sectionHeader}>About</Text>
         <Text style={styles.description}>{about}</Text>
@@ -171,27 +111,19 @@ const handleUnRSVP = async () => {
             <Text style={styles.description}>{requirements}</Text>
           </>
         )}
-        {isOwner && (
-          <TouchableOpacity style={styles.editButton} onPress={() => router.push("/updateEvent")}>
-            <Text style={styles.editText}>Edit Event</Text>
+
+        {isRsvped ? (
+          <TouchableOpacity style={[styles.rsvpButton, styles.unrsvpButton]} onPress={handleUnRSVP}>
+            <Text style={styles.rsvpText}>Un-RSVP</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.rsvpButton} onPress={handleRSVP}>
+            <Text style={styles.rsvpText}>RSVP</Text>
           </TouchableOpacity>
         )}
+        {isRsvped && <AttendeeToggle eventTitle={title} />}
+
       </View>
-      
-      {!isRsvped ? (
-        <TouchableOpacity style={styles.rsvpButton} onPress={handleRSVP}>
-          <Text style={styles.rsvpText}>RSVP</Text>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity style={styles.unRsvpButton} onPress={handleUnRSVP}>
-          <Text style={styles.unRsvpText}>Un-RSVP</Text>
-        </TouchableOpacity>
-      )}
-
-
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>Attending</Text>
-        </View>
     </ScrollView>
   );
 };
@@ -203,18 +135,11 @@ const styles = StyleSheet.create({
   detailsContainer: { backgroundColor: "white", padding: 20, marginTop: -20, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
   title: { fontSize: 24, fontWeight: "bold", color: "#3F587D" },
   date: { fontSize: 16, color: "#748BAB", marginBottom: 10 },
-  section: { marginTop: 20, paddingHorizontal: 20 },
   sectionHeader: { fontSize: 18, fontWeight: "bold", color: "#3F587D", marginTop: 15 },
   description: { fontSize: 16, color: "#3F587D", marginTop: 5 },
-
   rsvpButton: { backgroundColor: "#748BAB", paddingVertical: 12, borderRadius: 10, alignItems: "center", marginTop: 20 },
+  unrsvpButton: { backgroundColor: "#D9534F" },
   rsvpText: { color: "white", fontSize: 18, fontWeight: "bold" },
-
-  unRsvpButton: { backgroundColor: "#D9534F", paddingVertical: 12, borderRadius: 10, alignItems: "center", marginTop: 10 },
-  unRsvpText: { color: "white", fontSize: 18, fontWeight: "bold" },
-
-  editButton: { backgroundColor: "#3F587D", paddingVertical: 12, borderRadius: 10, alignItems: "center", marginTop: 20 },
-  editText: { color: "white", fontSize: 18, fontWeight: "bold" },
 });
 
-export default EventDetails;
+export default EventDetailsComponent;

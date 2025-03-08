@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, Alert, BackHandler } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
@@ -9,9 +9,8 @@ import images from "../constants/images";
 interface ProfileHeaderProps {
     userName: string;
     selectedSchool: string;
-    profilePicture?: string;  // ✅ Add this line
-  }
-  
+    profilePicture?: string;
+}
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({ userName, selectedSchool }) => {
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
@@ -30,11 +29,14 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ userName, selectedSchool 
         console.error("Error loading profile picture:", error);
       }
     };
-
     loadProfilePicture();
   }, []);
 
-  // ✅ Image Picker Function
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => true);
+    return () => backHandler.remove();
+  }, []);
+
   const pickProfilePicture = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -47,7 +49,6 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ userName, selectedSchool 
       const newProfilePicture = result.assets[0].uri;
       setProfilePicture(newProfilePicture);
 
-      // ✅ Save the new profile picture in AsyncStorage
       const storedUsers = await AsyncStorage.getItem("users");
       if (storedUsers) {
         let users = JSON.parse(storedUsers);
@@ -57,9 +58,26 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ userName, selectedSchool 
     }
   };
 
+  const handleLogout = async () => {
+    Alert.alert("Logout", "Are you sure you want to log out?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Yes", onPress: async () => {
+          try {
+            router.replace("/(auth)/sign-in"); // Prevent navigating back to logged-in state
+          } catch (error) {
+            console.error("Error logging out:", error);
+          }
+        }
+      }
+    ]);
+  };
+
   return (
     <View style={styles.headerContainer}>
-      {/* Profile Picture Upload */}
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Ionicons name="log-out-outline" size={24} color="white" />
+      </TouchableOpacity>
+      
       <TouchableOpacity onPress={pickProfilePicture} style={styles.profileContainer}>
         <Image 
           source={profilePicture ? { uri: profilePicture } : images.profilePlaceholder} 
@@ -70,11 +88,9 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ userName, selectedSchool 
         </View>
       </TouchableOpacity>
 
-      {/* User Details */}
       <Text style={styles.userName}>{userName}</Text>
       <Text style={styles.schoolName}>{selectedSchool}</Text>
 
-      {/* Change School Button */}
       <TouchableOpacity onPress={() => router.push("/(auth)/school-select")}>
         <Text style={styles.changeSchool}>Change my school</Text>
       </TouchableOpacity>
@@ -91,6 +107,15 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     paddingVertical: 50,
+    position: "relative",
+  },
+  logoutButton: {
+    position: "absolute",
+    top: 20,
+    right: 20,
+    backgroundColor: "#D9534F",
+    padding: 10,
+    borderRadius: 20,
   },
   profileContainer: { position: "relative" },
   profileImage: { width: 300, height: 300, borderRadius: 400, borderWidth: 2, borderColor: "white", marginBottom: 20 },

@@ -19,7 +19,7 @@ const CreateEvent = () => {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const router = useRouter();
 
-  // ✅ Pick Image
+  //  Pick Image
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -33,11 +33,11 @@ const CreateEvent = () => {
     }
   };
 
-  // ✅ Show Date & Time Pickers
+  //  Show Date & Time Pickers
   const openDatePicker = () => setShowDatePicker(true);
   const openTimePicker = () => setShowTimePicker(true);
 
-  // ✅ Handle Date & Time Changes
+  //  Handle Date & Time Changes
   const onDateChange = (event: any, selectedDate?: Date) => {
     if (selectedDate) setDate(selectedDate);
     setShowDatePicker(false);
@@ -48,46 +48,53 @@ const CreateEvent = () => {
     setShowTimePicker(false);
   };
 
-  // ✅ Save Event
+  //  Save Event
   const handleShareEvent = async () => {
     if (!title || !about || !address) {
       Alert.alert("Missing Fields", "Please fill in all required fields before sharing.");
       return;
     }
-
-    const storedUsers = await AsyncStorage.getItem("users");
-    let creator = "Unknown User";
-
-    if (storedUsers) {
-      const users = JSON.parse(storedUsers);
-      const latestUser = users[users.length - 1];
-      creator = `${latestUser.firstName} ${latestUser.lastName}`;
-    }
-
-    const newEvent = { 
-      title, 
-      about, 
-      address, 
-      requirements, 
-      imageUri, 
-      creator, 
-      date: date.toISOString(), 
-      time: time.toISOString()
-    };
-
+  
     try {
+      const storedUsers = await AsyncStorage.getItem("users");
+      let creator = "Unknown User";
+      let school = "Unknown School";
+  
+      if (storedUsers) {
+        const users = JSON.parse(storedUsers);
+        const latestUser = users[users.length - 1];
+        creator = `${latestUser.firstName} ${latestUser.lastName}`;
+        school = latestUser.selectedSchool; //  Auto-assign selected school
+      }
+  
+      const newEvent = { 
+        title, 
+        about, 
+        address, 
+        requirements, 
+        imageUri, 
+        creator, 
+        school, //  Assign the school here
+        date: date.toISOString(), 
+        time: time.toISOString()
+      };
+  
+      console.log("📝 Creating Event...");
+      console.log("🎓 Assigned School:", school);
+      console.log("📌 Event Data:", newEvent);
+  
       const existingEvents = await AsyncStorage.getItem("events");
       const eventsList = existingEvents ? JSON.parse(existingEvents) : [];
       eventsList.push(newEvent);
       await AsyncStorage.setItem("events", JSON.stringify(eventsList));
-
+  
       Alert.alert("Success", "Event has been shared!");
-      setTitle(""); setAbout(""); setAddress(""); setRequirements(""); setImageUri(null); setDate(new Date()); setTime(new Date());
-      router.push("/(tabs)/home");
+      router.push("/(tabs)/home"); 
     } catch (error) {
       console.error("Error saving event:", error);
     }
   };
+  
 
   return (
     <ScrollView style={styles.container}>
@@ -97,7 +104,7 @@ const CreateEvent = () => {
           <Ionicons name="close-outline" size={24} color="gray" />
         </TouchableOpacity>
 
-        {/* ✅ Image Upload */}
+        {/*  Image Upload */}
         <TouchableOpacity style={styles.imageUpload} onPress={pickImage}>
           {imageUri ? (
             <Image source={{ uri: imageUri }} style={styles.uploadedImage} />
@@ -110,7 +117,7 @@ const CreateEvent = () => {
         <Text style={styles.label}>Title</Text>
         <TextInput style={styles.input} placeholder="Event Name" value={title} onChangeText={setTitle} />
 
-        {/* ✅ Date Picker */}
+        {/*  Date Picker */}
         <Text style={styles.label}>Event Date</Text>
         <TouchableOpacity style={styles.datePicker} onPress={openDatePicker}>
           <Text style={styles.dateText}>{date.toDateString()}</Text>
@@ -119,7 +126,7 @@ const CreateEvent = () => {
           <DateTimePicker value={date} mode="date" display={Platform.OS === "ios" ? "spinner" : "default"} onChange={onDateChange} textColor="black"/>
         )}
 
-        {/* ✅ Time Picker */}
+        {/*  Time Picker */}
         <Text style={styles.label}>Event Time</Text>
         <TouchableOpacity style={styles.datePicker} onPress={openTimePicker}>
           <Text style={styles.dateText}>{time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</Text>
@@ -136,7 +143,7 @@ const CreateEvent = () => {
         <Text style={styles.label}>Address</Text>
         <TextInput style={styles.input} placeholder="Event Address" value={address} onChangeText={setAddress} />
 
-        {/* ✅ Requirements Input */}
+        {/*  Requirements Input */}
         <Text style={styles.label}>Requirements</Text>
         <TextInput style={styles.input} placeholder="Any restrictions (optional)" value={requirements} onChangeText={setRequirements} />
 

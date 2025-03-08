@@ -87,25 +87,39 @@ const UpdateEvent = () => {
       Alert.alert("Missing Fields", "Please fill in all required fields before updating.");
       return;
     }
-
+  
     try {
+      // Update the event in "events" storage
       const storedEvents = await AsyncStorage.getItem("events");
       let eventsList = storedEvents ? JSON.parse(storedEvents) : [];
-
-      //  Update Existing Event
+  
       const updatedEvents = eventsList.map((event: any) =>
         event.title === params.title
           ? { ...event, title, about, address, requirements, imageUri, date: date.toISOString(), time: time.toISOString() }
           : event
       );
-
+  
       await AsyncStorage.setItem("events", JSON.stringify(updatedEvents));
+  
+      // ✅ ALSO UPDATE THE RSVP LIST ("rsvpEvents")
+      const storedRsvpEvents = await AsyncStorage.getItem("rsvpEvents");
+      let rsvpEventsList = storedRsvpEvents ? JSON.parse(storedRsvpEvents) : [];
+  
+      const updatedRsvpEvents = rsvpEventsList.map((event: any) =>
+        event.title === params.title
+          ? { ...event, title, about, address, requirements, imageUri, date: date.toISOString(), time: time.toISOString() }
+          : event
+      );
+  
+      await AsyncStorage.setItem("rsvpEvents", JSON.stringify(updatedRsvpEvents));
+  
       Alert.alert("Success", "Event has been updated!");
       router.push("/(tabs)/home");
     } catch (error) {
       console.error("Error updating event:", error);
     }
   };
+  
 
   return (
     <>
