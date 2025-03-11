@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, Modal, ScrollView } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -23,6 +23,10 @@ interface EventSectionProps {
 
 const EventSection: React.FC<EventSectionProps> = ({ refreshTrigger, userName }) => {
   const [events, setEvents] = useState<Event[]>([]);
+  const [sortOrder, setSortOrder] = useState<"soonest" | "latest">("soonest");
+  const [selectedHost, setSelectedHost] = useState<string | null>(null);
+  const [hosts, setHosts] = useState<string[]>([]);
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const router = useRouter();
 
   const fetchEvents = async () => {
@@ -35,24 +39,92 @@ const EventSection: React.FC<EventSectionProps> = ({ refreshTrigger, userName })
         const user = JSON.parse(storedUser);
   
         // ✅ Filter events based on selected school
-        const filteredEvents = events.filter((event: any) => event.school === user.selectedSchool);
+        let filteredEvents = events.filter((event: any) => event.school === user.selectedSchool);
+        
+        // ✅ Filter events by selected host
+        if (selectedHost) {
+          filteredEvents = filteredEvents.filter((event: Event) => event.creator === selectedHost);
+        }
+
+        // ✅ Sort events by date based on sortOrder
+        const sortedEvents = filteredEvents.sort((a: Event, b: Event) => {
+          return sortOrder === "soonest"
+            ? new Date(a.date).getTime() - new Date(b.date).getTime()
+            : new Date(b.date).getTime() - new Date(a.date).getTime();
+        });
   
-        setEvents(filteredEvents);
+        setEvents(sortedEvents);
+
+        // ✅ Update the list of hosts
+        const uniqueHosts = [...new Set(filteredEvents.map((event: Event) => event.creator))];
+        setHosts(uniqueHosts as string[]);
       }
     } catch (error) {
       console.error("Error fetching events:", error);
     }
   };
   
-  
   useEffect(() => {
     fetchEvents();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, sortOrder, selectedHost]);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Going on Near You</Text>
-
+      <View style={styles.header}>
+        <Text style={styles.sectionTitle}>Going on Near You</Text>
+        <TouchableOpacity
+          style={styles.sortButton}
+          onPress={() => setSortOrder(sortOrder === "soonest" ? "latest" : "soonest")}
+        >
+          <Ionicons
+            name={sortOrder === "soonest" ? "arrow-down-outline" : "arrow-up-outline"}
+            size={24}
+            color="#3F587D"
+          />
+        </TouchableOpacity>
+      </View>
+      <TouchableOpacity
+        style={styles.dropdownButton}
+        onPress={() => setIsDropdownVisible(true)}
+      >
+        <Text style={styles.dropdownButtonText}>
+          {selectedHost ? selectedHost : "All Hosts"}
+        </Text>
+        <Ionicons name="chevron-down-outline" size={24} color="#3F587D" />
+      </TouchableOpacity>
+      <Modal
+        visible={isDropdownVisible}
+        transparent={true}
+        animationType="slide"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <ScrollView>
+              <TouchableOpacity
+                style={styles.modalItem}
+                onPress={() => {
+                  setSelectedHost(null);
+                  setIsDropdownVisible(false);
+                }}
+              >
+                <Text style={styles.modalItemText}>All Hosts</Text>
+              </TouchableOpacity>
+              {hosts.map((host) => (
+                <TouchableOpacity
+                  key={host}
+                  style={styles.modalItem}
+                  onPress={() => {
+                    setSelectedHost(host);
+                    setIsDropdownVisible(false);
+                  }}
+                >
+                  <Text style={styles.modalItemText}>{host}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
       {events.length > 0 ? (
         <FlatList
           data={events}
@@ -129,11 +201,40 @@ const EventSection: React.FC<EventSectionProps> = ({ refreshTrigger, userName })
 
 const styles = StyleSheet.create({
   container: { paddingHorizontal: 20, marginTop: 70 },
-  sectionTitle: { marginBottom: 20, fontSize: 25, fontWeight: "bold", color: "#3F587D" },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  sectionTitle: { fontSize: 25, fontWeight: "bold", color: "#3F587D",},
+  sortButton: { marginLeft: 10 },
+  dropdownButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 10,
+    backgroundColor: "#E0E7F3",
+    borderRadius: 10,
+    marginVertical: 10,
+  },
+  dropdownButtonText: { fontSize: 16, color: "#3F587D" },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    width: "80%",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
+  },
+  modalItem: {
+    paddingVertical: 10,
+  },
+  modalItemText: { fontSize: 16, color: "#3F587D" },
   eventCard: { 
     backgroundColor: "#E0E7F3", 
     borderRadius: 10, 
     padding: 10, 
+    marginTop:15,
     marginBottom: 10, 
     flexDirection: "row", 
     alignItems: "center",
@@ -172,4 +273,4 @@ const styles = StyleSheet.create({
   noEventsText: { fontSize: 16, color: "#3F587D" },
 });
 
-export default EventSection;
+export default EventSection;1

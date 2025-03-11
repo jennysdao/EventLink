@@ -52,6 +52,16 @@ const EventDetailsComponent: React.FC<EventProps> = ({ title, date, about, addre
     }
   };
 
+  const handleRSVPClick = async () => {
+    await handleRSVP({ title, date, about, address, requirements, imageUri });
+    loadAttendees();
+  };
+
+  const handleUnRSVPClick = async () => {
+    await handleUnRSVP(title);
+    loadAttendees();
+  };
+
   return (
     <ScrollView style={styles.container}>
       <Image source={{ uri: imageUri }} style={styles.eventImage} />
@@ -97,11 +107,11 @@ const EventDetailsComponent: React.FC<EventProps> = ({ title, date, about, addre
         )}
 
         {isRsvped ? (
-          <TouchableOpacity style={[styles.rsvpButton, styles.unrsvpButton]} onPress={() => handleUnRSVP(title)}>
+          <TouchableOpacity style={[styles.rsvpButton, styles.unrsvpButton]} onPress={handleUnRSVPClick}>
             <Text style={styles.rsvpText}>Un-RSVP</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.rsvpButton} onPress={() => handleRSVP({ title, date, about, address, requirements, imageUri, attendees: attendeeCount })}>
+          <TouchableOpacity style={styles.rsvpButton} onPress={handleRSVPClick}>
             <Text style={styles.rsvpText}>RSVP</Text>
           </TouchableOpacity>
         )}
