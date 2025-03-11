@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { useLocalSearchParams } from "expo-router";
-import AttendeeToggle from "../components/RSVPUserList"; // Import the new component
-
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useRSVP } from '../utils/RSVPContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface EventProps {
   title: string;
@@ -16,76 +14,43 @@ interface EventProps {
   imageUri?: string;
 }
 
+interface Attendee {
+  name: string;
+  profilePicture: string;
+  email: string;
+}
+
 const EventDetailsComponent: React.FC<EventProps> = ({ title, date, about, address, requirements, imageUri }) => {
   const router = useRouter();
+  const { currentUser, handleRSVP, handleUnRSVP, savedEvents } = useRSVP();
   const [isRsvped, setIsRsvped] = useState(false);
+  const [attendees, setAttendees] = useState<Attendee[]>([]);
+  const [attendeeCount, setAttendeeCount] = useState(0);
+  const [showAttendees, setShowAttendees] = useState(false);
 
   useEffect(() => {
     checkIfRsvped();
-  }, []);
+    loadAttendees();
+  }, [savedEvents]);
 
-  const checkIfRsvped = async () => {
-    try {
-      const storedRsvpEvents = await AsyncStorage.getItem("rsvpEvents");
-      if (storedRsvpEvents) {
-        const rsvpEvents = JSON.parse(storedRsvpEvents);
-        const alreadyRsvped = rsvpEvents.some((event: { title: string }) => event.title === title);
-        setIsRsvped(alreadyRsvped);
-      }
-    } catch (error) {
-      console.error("Error checking RSVP status:", error);
-    }
+  const checkIfRsvped = () => {
+    if (!currentUser) return;
+    const alreadyRsvped = savedEvents.some((event) => event.title === title);
+    setIsRsvped(alreadyRsvped);
   };
 
-  const handleRSVP = async () => {
+  const loadAttendees = async () => {
     try {
-      const storedRsvpEvents = await AsyncStorage.getItem("rsvpEvents");
-      let rsvpEvents = storedRsvpEvents ? JSON.parse(storedRsvpEvents) : [];
-
-      if (!rsvpEvents.some((event: { title: string }) => event.title === title)) {
-        const newEvent = { title, date, about, address, requirements, imageUri };
-        rsvpEvents.push(newEvent);
-        await AsyncStorage.setItem("rsvpEvents", JSON.stringify(rsvpEvents));
-
-        setIsRsvped(true);
-        Alert.alert("Success", "You have RSVP'd for this event!");
-      }
-    } catch (error) {
-      console.error("Error saving RSVP:", error);
-    }
-  };
-
-  const handleUnRSVP = async () => {
-    try {
-      const storedRsvpEvents = await AsyncStorage.getItem("rsvpEvents");
-      let rsvpEvents = storedRsvpEvents ? JSON.parse(storedRsvpEvents) : [];
-  
-      // ✅ Remove the event from RSVP list
-      rsvpEvents = rsvpEvents.filter((event: any) => event.title !== title);
-      await AsyncStorage.setItem("rsvpEvents", JSON.stringify(rsvpEvents));
-      
-      // ✅ Remove user from attendee list
       const storedAttendees = await AsyncStorage.getItem(`attendees_${title}`);
       if (storedAttendees) {
-        let attendeesList = JSON.parse(storedAttendees);
-        const storedUsers = await AsyncStorage.getItem("users");
-        if (storedUsers) {
-          const users = JSON.parse(storedUsers);
-          const latestUser = users[users.length - 1];
-          const profilePicture = latestUser.profilePicture || null;
-  
-          // Remove user from attendees
-          attendeesList = attendeesList.filter((attendee: string) => attendee !== profilePicture);
-          await AsyncStorage.setItem(`attendees_${title}`, JSON.stringify(attendeesList));
-        }
+        const attendeesList = JSON.parse(storedAttendees);
+        setAttendees(attendeesList);
+        setAttendeeCount(attendeesList.length);
       }
-  
-      setIsRsvped(false); // ✅ Update state
     } catch (error) {
-      console.error("Error handling un-RSVP:", error);
+      console.error('Error loading attendees:', error);
     }
   };
-  
 
   return (
     <ScrollView style={styles.container}>
@@ -97,7 +62,7 @@ const EventDetailsComponent: React.FC<EventProps> = ({ title, date, about, addre
 
       <View style={styles.detailsContainer}>
         <Text style={styles.title}>{title}</Text>
-        <Text style={styles.date}>{date ? new Date(date).toDateString() : "No Date Available"}</Text>
+        <Text style={styles.date}>{date ? new Date(date).toDateString() : 'No Date Available'}</Text>
 
         <Text style={styles.sectionHeader}>About</Text>
         <Text style={styles.description}>{about}</Text>
@@ -112,34 +77,58 @@ const EventDetailsComponent: React.FC<EventProps> = ({ title, date, about, addre
           </>
         )}
 
+        <Text style={styles.sectionHeader}>Number of Attendees</Text>
+        <Text style={styles.description}>{attendeeCount}</Text>
+
+        <TouchableOpacity style={styles.viewAttendeesButton} onPress={() => setShowAttendees(!showAttendees)}>
+          <Text style={styles.viewAttendeesText}>{showAttendees ? 'Hide Attendees' : 'View Attendees'}</Text>
+        </TouchableOpacity>
+
+        {showAttendees && (
+          <View style={styles.attendeesContainer}>
+            {attendees.map((attendee, index) => (
+              <View key={index} style={styles.attendee}>
+                <Image source={{ uri: attendee.profilePicture }} style={styles.attendeeImage} />
+                <Text style={styles.attendeeName}>{attendee.name}</Text>
+                <Text style={styles.attendeeEmail}>{attendee.email}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
         {isRsvped ? (
-          <TouchableOpacity style={[styles.rsvpButton, styles.unrsvpButton]} onPress={handleUnRSVP}>
+          <TouchableOpacity style={[styles.rsvpButton, styles.unrsvpButton]} onPress={() => handleUnRSVP(title)}>
             <Text style={styles.rsvpText}>Un-RSVP</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.rsvpButton} onPress={handleRSVP}>
+          <TouchableOpacity style={styles.rsvpButton} onPress={() => handleRSVP({ title, date, about, address, requirements, imageUri, attendees: attendeeCount })}>
             <Text style={styles.rsvpText}>RSVP</Text>
           </TouchableOpacity>
         )}
-        {isRsvped && <AttendeeToggle eventTitle={title} />}
-
       </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "white" },
-  eventImage: { width: "100%", height: 300 },
-  backIcon: { position: "absolute", top: 50, right: 20, backgroundColor: "rgba(0,0,0,0.3)", padding: 8, borderRadius: 50 },
-  detailsContainer: { backgroundColor: "white", padding: 20, marginTop: -20, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
-  title: { fontSize: 24, fontWeight: "bold", color: "#3F587D" },
-  date: { fontSize: 16, color: "#748BAB", marginBottom: 10 },
-  sectionHeader: { fontSize: 18, fontWeight: "bold", color: "#3F587D", marginTop: 15 },
-  description: { fontSize: 16, color: "#3F587D", marginTop: 5 },
-  rsvpButton: { backgroundColor: "#748BAB", paddingVertical: 12, borderRadius: 10, alignItems: "center", marginTop: 20 },
-  unrsvpButton: { backgroundColor: "#D9534F" },
-  rsvpText: { color: "white", fontSize: 18, fontWeight: "bold" },
+  container: { flex: 1, backgroundColor: 'white' },
+  eventImage: { width: '100%', height: 300 },
+  backIcon: { position: 'absolute', top: 50, right: 20, backgroundColor: 'rgba(0,0,0,0.3)', padding: 8, borderRadius: 50 },
+  detailsContainer: { backgroundColor: 'white', padding: 20, marginTop: -20, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#3F587D' },
+  date: { fontSize: 16, color: '#748BAB', marginBottom: 10 },
+  sectionHeader: { fontSize: 18, fontWeight: 'bold', color: '#3F587D', marginTop: 15 },
+  description: { fontSize: 16, color: '#3F587D', marginTop: 5 },
+  rsvpButton: { backgroundColor: '#748BAB', paddingVertical: 12, borderRadius: 10, alignItems: 'center', marginTop: 20 },
+  unrsvpButton: { backgroundColor: '#D9534F' },
+  rsvpText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
+  viewAttendeesButton: { backgroundColor: '#3F587D', paddingVertical: 12, borderRadius: 10, alignItems: 'center', marginTop: 20 },
+  viewAttendeesText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
+  attendeesContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 10 },
+  attendee: { alignItems: 'center', margin: 5 },
+  attendeeImage: { width: 60, height: 60, borderRadius: 30, borderWidth: 2, borderColor: 'white' },
+  attendeeName: { marginTop: 5, fontSize: 14, color: '#3F587D' },
+  attendeeEmail: { fontSize: 12, color: '#748BAB' },
 });
 
 export default EventDetailsComponent;

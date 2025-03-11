@@ -37,18 +37,15 @@ const SignUpForm = () => {
   
     try {
       const storedUsers = await AsyncStorage.getItem("users");
-      const storedSchool = await AsyncStorage.getItem("selectedSchool"); // ✅ Retrieve last stored school
       const usersList = storedUsers ? JSON.parse(storedUsers) : [];
   
-      // Assign selected school to user
       const newUser = {
         id: email.toLowerCase(), // ✅ Use email as unique ID
         firstName,
         lastName,
         email: email.toLowerCase(),
         password,
-        profilePicture: null, // Can be updated later
-        selectedSchool: storedSchool || "No School Selected", // ✅ Assign school
+        profilePicture: profilePicture || null, // ✅ Store profile picture
       };
   
       usersList.push(newUser);
@@ -57,12 +54,13 @@ const SignUpForm = () => {
       console.log("✅ New User Created:", newUser);
   
       Alert.alert("Success", "Account created successfully!");
-      router.push("/(auth)/sign-in"); // Navigate to sign-in screen after success
+      router.push("/(auth)/sign-in"); // ✅ Navigate to sign-in screen
     } catch (error) {
       console.error("❌ Error signing up:", error);
       Alert.alert("Error", "Something went wrong. Please try again.");
     }
   };
+  
   
   
 

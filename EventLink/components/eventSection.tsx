@@ -28,15 +28,14 @@ const EventSection: React.FC<EventSectionProps> = ({ refreshTrigger, userName })
   const fetchEvents = async () => {
     try {
       const storedEvents = await AsyncStorage.getItem("events");
-      const storedUsers = await AsyncStorage.getItem("users");
+      const storedUser = await AsyncStorage.getItem("currentUser");
   
-      if (storedEvents && storedUsers) {
+      if (storedEvents && storedUser) {
         const events = JSON.parse(storedEvents);
-        const users = JSON.parse(storedUsers);
-        const latestUser = users[users.length - 1];
+        const user = JSON.parse(storedUser);
   
-        //  Filter events based on the selected school of the user
-        const filteredEvents = events.filter((event: any) => event.school === latestUser.selectedSchool);
+        // ✅ Filter events based on selected school
+        const filteredEvents = events.filter((event: any) => event.school === user.selectedSchool);
   
         setEvents(filteredEvents);
       }
@@ -44,6 +43,7 @@ const EventSection: React.FC<EventSectionProps> = ({ refreshTrigger, userName })
       console.error("Error fetching events:", error);
     }
   };
+  
   
   useEffect(() => {
     fetchEvents();
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#E0E7F3", 
     borderRadius: 10, 
     padding: 10, 
-    marginBottom: 15, 
+    marginBottom: 10, 
     flexDirection: "row", 
     alignItems: "center",
     justifyContent: "space-between" //  Aligns edit icon correctly

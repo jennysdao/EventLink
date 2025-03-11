@@ -1,6 +1,7 @@
 import { View, Text, Image, StyleSheet, Dimensions } from "react-native";
 import { Tabs } from "expo-router";
 import images from "../constants/images";
+import { RSVPProvider } from '../utils/RSVPContext';
 import ContinueButton from "../components/continueButton"; // ✅ Import Button Component
 
 const { width, height } = Dimensions.get("window");

@@ -29,19 +29,19 @@ const Home = () => {
   //  Fetch user & school data
   const fetchUserData = async () => {
     try {
-      const storedSchool = await AsyncStorage.getItem("selectedSchool");
-      const storedUsers = await AsyncStorage.getItem("users");
-
-      if (storedUsers) {
-        const users = JSON.parse(storedUsers);
-        const latestUser = users[users.length - 1];
-        setUserName(`${latestUser.firstName} ${latestUser.lastName}`);
+      const storedUser = await AsyncStorage.getItem("currentUser");
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        setUserName(`${user.firstName} ${user.lastName}`);
       }
+  
+      const storedSchool = await AsyncStorage.getItem("selectedSchool");
       if (storedSchool) setSelectedSchool(storedSchool);
     } catch (error) {
       console.error("Error loading user data:", error);
     }
   };
+  
 
   const handleSearch = (query: string) => {
     if (query.trim() !== "") {

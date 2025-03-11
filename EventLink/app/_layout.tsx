@@ -2,6 +2,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import { SplashScreen, Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import { useEffect } from "react";
+import { RSVPProvider } from '../utils/RSVPContext';
+
 
 import React from 'react';
 
@@ -33,6 +35,7 @@ const RootLayout = () => {
   }
 
   return (
+    <RSVPProvider>
     <Stack
       screenOptions={{
         gestureEnabled: false, // 🔒 Prevents swipe-back navigation globally
@@ -43,8 +46,10 @@ const RootLayout = () => {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="event" options={{ headerShown: false }} />     
       <Stack.Screen name="updateEvent" options={{ headerShown: false }} />
-      <Stack.Screen name="(/search/[query])" options={{ headerShown: false }} />
+      <Stack.Screen name="search/searchQuery" options={{ headerShown: false }} />
     </Stack>
+    </RSVPProvider>
+
   );
 };
 

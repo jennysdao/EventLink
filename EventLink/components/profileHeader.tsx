@@ -9,21 +9,20 @@ import images from "../constants/images";
 interface ProfileHeaderProps {
     userName: string;
     selectedSchool: string;
-    profilePicture?: string;
+    onProfilePictureUpdate: (newProfilePicture: string) => void; // Add this prop
 }
 
-const ProfileHeader: React.FC<ProfileHeaderProps> = ({ userName, selectedSchool }) => {
+const ProfileHeader: React.FC<ProfileHeaderProps> = ({ userName, selectedSchool, onProfilePictureUpdate }) => {
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     const loadProfilePicture = async () => {
       try {
-        const storedUsers = await AsyncStorage.getItem("users");
-        if (storedUsers) {
-          const users = JSON.parse(storedUsers);
-          const latestUser = users[users.length - 1];
-          setProfilePicture(latestUser.profilePicture || null);
+        const storedUser = await AsyncStorage.getItem("currentUser");
+        if (storedUser) {
+          const user = JSON.parse(storedUser);
+          setProfilePicture(user.profilePicture || null);
         }
       } catch (error) {
         console.error("Error loading profile picture:", error);
@@ -49,12 +48,14 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ userName, selectedSchool 
       const newProfilePicture = result.assets[0].uri;
       setProfilePicture(newProfilePicture);
 
-      const storedUsers = await AsyncStorage.getItem("users");
-      if (storedUsers) {
-        let users = JSON.parse(storedUsers);
-        users[users.length - 1].profilePicture = newProfilePicture;
-        await AsyncStorage.setItem("users", JSON.stringify(users));
+      const storedUser = await AsyncStorage.getItem("currentUser");
+      if (storedUser) {
+        let user = JSON.parse(storedUser);
+        user.profilePicture = newProfilePicture;
+        await AsyncStorage.setItem("currentUser", JSON.stringify(user));
       }
+
+      onProfilePictureUpdate(newProfilePicture); // Call the callback function
     }
   };
 
@@ -63,7 +64,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ userName, selectedSchool 
       { text: "Cancel", style: "cancel" },
       { text: "Yes", onPress: async () => {
           try {
-            router.replace("/(auth)/sign-in"); // Prevent navigating back to logged-in state
+            await AsyncStorage.removeItem("currentUser"); // ✅ Remove signed-in user
+            router.replace("/(auth)/sign-in"); // ✅ Ensure user cannot go back
           } catch (error) {
             console.error("Error logging out:", error);
           }
@@ -115,11 +117,12 @@ const styles = StyleSheet.create({
     right: 20,
     backgroundColor: "#D9534F",
     padding: 10,
-    borderRadius: 20,
+    borderRadius: 30,
+    marginTop: 40,
   },
-  profileContainer: { position: "relative" },
-  profileImage: { width: 300, height: 300, borderRadius: 400, borderWidth: 2, borderColor: "white", marginBottom: 20 },
-  editIcon: { position: "absolute", bottom: 40, right: 135, backgroundColor: "#3F587D", borderRadius: 15, padding: 5 },
+  profileContainer: { position: "relative", marginTop: 50},
+  profileImage: { width: 200, height: 200, borderRadius: 100, borderWidth: 1, borderColor: "white", marginBottom: 20 },
+  editIcon: { position: "absolute", bottom: 5, right: 5, backgroundColor: "#3F587D", borderRadius: 15, padding: 5 },
   userName: { fontSize: 22, fontWeight: "bold", color: "white", marginTop: 10 },
   schoolName: { fontSize: 16, color: "#ABC1E2", marginBottom: 5 },
   changeSchool: { fontSize: 14, color: "#ABC1E2", textDecorationLine: "underline" },

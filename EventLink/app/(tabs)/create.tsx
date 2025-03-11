@@ -56,15 +56,14 @@ const CreateEvent = () => {
     }
   
     try {
-      const storedUsers = await AsyncStorage.getItem("users");
+      const storedUser = await AsyncStorage.getItem("currentUser");
       let creator = "Unknown User";
       let school = "Unknown School";
   
-      if (storedUsers) {
-        const users = JSON.parse(storedUsers);
-        const latestUser = users[users.length - 1];
-        creator = `${latestUser.firstName} ${latestUser.lastName}`;
-        school = latestUser.selectedSchool; //  Auto-assign selected school
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        creator = `${user.firstName} ${user.lastName}`;
+        school = user.selectedSchool; // ✅ Assign the user's selected school
       }
   
       const newEvent = { 
@@ -74,7 +73,7 @@ const CreateEvent = () => {
         requirements, 
         imageUri, 
         creator, 
-        school, //  Assign the school here
+        school, // ✅ Store the event under this school
         date: date.toISOString(), 
         time: time.toISOString()
       };
@@ -94,6 +93,7 @@ const CreateEvent = () => {
       console.error("Error saving event:", error);
     }
   };
+  
   
 
   return (

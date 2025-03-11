@@ -89,29 +89,26 @@ const UpdateEvent = () => {
     }
   
     try {
-      // Update the event in "events" storage
       const storedEvents = await AsyncStorage.getItem("events");
       let eventsList = storedEvents ? JSON.parse(storedEvents) : [];
   
       const updatedEvents = eventsList.map((event: any) =>
         event.title === params.title
-          ? { ...event, title, about, address, requirements, imageUri, date: date.toISOString(), time: time.toISOString() }
+          ? { 
+              ...event, 
+              title, 
+              about, 
+              address, 
+              requirements, 
+              imageUri, 
+              date: date.toISOString(), 
+              time: time.toISOString(),
+              school: event.school // ✅ Preserve school assignment
+            }
           : event
       );
   
       await AsyncStorage.setItem("events", JSON.stringify(updatedEvents));
-  
-      // ✅ ALSO UPDATE THE RSVP LIST ("rsvpEvents")
-      const storedRsvpEvents = await AsyncStorage.getItem("rsvpEvents");
-      let rsvpEventsList = storedRsvpEvents ? JSON.parse(storedRsvpEvents) : [];
-  
-      const updatedRsvpEvents = rsvpEventsList.map((event: any) =>
-        event.title === params.title
-          ? { ...event, title, about, address, requirements, imageUri, date: date.toISOString(), time: time.toISOString() }
-          : event
-      );
-  
-      await AsyncStorage.setItem("rsvpEvents", JSON.stringify(updatedRsvpEvents));
   
       Alert.alert("Success", "Event has been updated!");
       router.push("/(tabs)/home");
@@ -119,6 +116,7 @@ const UpdateEvent = () => {
       console.error("Error updating event:", error);
     }
   };
+  
   
 
   return (

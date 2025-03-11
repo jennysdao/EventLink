@@ -50,13 +50,17 @@ const FormField: React.FC<FormFieldProps> = ({ email, setEmail, password, setPas
       const usersList: User[] = storedUsers ? JSON.parse(storedUsers) : [];
   
       const lowerCaseEmail = email.toLowerCase();
-      const userExists = usersList.find(
-        (user) => user.email.toLowerCase() === lowerCaseEmail && user.password === password
+      const userExists: User | undefined = usersList.find(
+        (user: User) => user.email.toLowerCase() === lowerCaseEmail && user.password === password
       );
   
       if (userExists) {
-        console.log("✅ User authenticated. Redirecting to School Selection...");
-        router.push("/(auth)/school-select"); // ✅ Always navigate to school selection
+        console.log("✅ User authenticated:", userExists.email);
+  
+        // ✅ Store only the signed-in user, including profile picture
+        await AsyncStorage.setItem("currentUser", JSON.stringify(userExists));
+  
+        router.push("/(auth)/school-select"); // Redirect after sign-in
       } else {
         Alert.alert("Error", "Invalid email or password.");
       }
@@ -65,6 +69,9 @@ const FormField: React.FC<FormFieldProps> = ({ email, setEmail, password, setPas
       Alert.alert("Error", "Something went wrong. Please try again.");
     }
   };
+  
+  
+  
   
   
 
