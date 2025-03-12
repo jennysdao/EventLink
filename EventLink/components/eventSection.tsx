@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-//  Define the Event Type
+// Define the Event Type
 interface Event {
   title: string;
   date: string;
@@ -17,8 +17,8 @@ interface Event {
 }
 
 interface EventSectionProps {
-  refreshTrigger?: boolean; //  Receives a trigger from Home.tsx
-  userName: string; //  Receive the current logged-in user
+  refreshTrigger?: boolean; // Receives a trigger from Home.tsx
+  userName: string; // Receive the current logged-in user
 }
 
 const EventSection: React.FC<EventSectionProps> = ({ refreshTrigger, userName }) => {
@@ -27,35 +27,54 @@ const EventSection: React.FC<EventSectionProps> = ({ refreshTrigger, userName })
   const [selectedHost, setSelectedHost] = useState<string | null>(null);
   const [hosts, setHosts] = useState<string[]>([]);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const [timeFilter, setTimeFilter] = useState<"week" | "month" | "all">("week"); // Add time filter state
+  const [isTimeFilterVisible, setIsTimeFilterVisible] = useState(false); // Add state for time filter dropdown
   const router = useRouter();
 
   const fetchEvents = async () => {
     try {
       const storedEvents = await AsyncStorage.getItem("events");
       const storedUser = await AsyncStorage.getItem("currentUser");
-  
+
       if (storedEvents && storedUser) {
         const events = JSON.parse(storedEvents);
         const user = JSON.parse(storedUser);
-  
-        // ✅ Filter events based on selected school
+
+        // Filter events based on selected school
         let filteredEvents = events.filter((event: any) => event.school === user.selectedSchool);
-        
-        // ✅ Filter events by selected host
+
+        // Filter events by selected host
         if (selectedHost) {
           filteredEvents = filteredEvents.filter((event: Event) => event.creator === selectedHost);
         }
 
-        // ✅ Sort events by date based on sortOrder
+        // Filter events based on time filter
+        const today = new Date();
+        let endDate = new Date(today);
+
+        if (timeFilter === "week") {
+          endDate.setDate(today.getDate() + 7);
+        } else if (timeFilter === "month") {
+          endDate.setMonth(today.getMonth() + 1);
+        } else {
+          endDate = new Date("9999-12-31"); // Set a far future date for "all" filter
+        }
+
+        filteredEvents = filteredEvents.filter((event: Event) => {
+          const eventDate = new Date(event.date);
+          return eventDate >= today && eventDate <= endDate;
+        });
+
+        // Sort events by date based on sortOrder
         const sortedEvents = filteredEvents.sort((a: Event, b: Event) => {
           return sortOrder === "soonest"
             ? new Date(a.date).getTime() - new Date(b.date).getTime()
             : new Date(b.date).getTime() - new Date(a.date).getTime();
         });
-  
+
         setEvents(sortedEvents);
 
-        // ✅ Update the list of hosts
+        // Update the list of hosts
         const uniqueHosts = [...new Set(filteredEvents.map((event: Event) => event.creator))];
         setHosts(uniqueHosts as string[]);
       }
@@ -63,15 +82,23 @@ const EventSection: React.FC<EventSectionProps> = ({ refreshTrigger, userName })
       console.error("Error fetching events:", error);
     }
   };
-  
+
   useEffect(() => {
     fetchEvents();
-  }, [refreshTrigger, sortOrder, selectedHost]);
+  }, [refreshTrigger, sortOrder, selectedHost, timeFilter]);
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.sectionTitle}>Going on Near You</Text>
+        <TouchableOpacity
+          style={styles.sectionTitleButton}
+          onPress={() => setIsTimeFilterVisible(true)}
+        >
+          <Text style={styles.sectionTitle}>
+            {timeFilter === "week" ? "Going on This Week" : timeFilter === "month" ? "Going on This Month" : "All Events"}
+          </Text>
+          <Ionicons name="chevron-down-outline" size={24} color="#3F587D" />
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.sortButton}
           onPress={() => setSortOrder(sortOrder === "soonest" ? "latest" : "soonest")}
@@ -125,6 +152,45 @@ const EventSection: React.FC<EventSectionProps> = ({ refreshTrigger, userName })
           </View>
         </View>
       </Modal>
+      <Modal
+        visible={isTimeFilterVisible}
+        transparent={true}
+        animationType="slide"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <ScrollView>
+              <TouchableOpacity
+                style={styles.modalItem}
+                onPress={() => {
+                  setTimeFilter("week");
+                  setIsTimeFilterVisible(false);
+                }}
+              >
+                <Text style={styles.modalItemText}>Going on This Week</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalItem}
+                onPress={() => {
+                  setTimeFilter("month");
+                  setIsTimeFilterVisible(false);
+                }}
+              >
+                <Text style={styles.modalItemText}>Going on This Month</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalItem}
+                onPress={() => {
+                  setTimeFilter("all");
+                  setIsTimeFilterVisible(false);
+                }}
+              >
+                <Text style={styles.modalItemText}>All Events</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
       {events.length > 0 ? (
         <FlatList
           data={events}
@@ -165,7 +231,7 @@ const EventSection: React.FC<EventSectionProps> = ({ refreshTrigger, userName })
                 <Text style={styles.eventCreator}>Hosted by {item.creator}</Text>
               </View>
 
-              {/*  Show Edit Icon if the Logged-in User is the Creator */}
+              {/* Show Edit Icon if the Logged-in User is the Creator */}
               {userName === item.creator && (
                 <TouchableOpacity
                   style={styles.editIcon}
@@ -202,7 +268,8 @@ const EventSection: React.FC<EventSectionProps> = ({ refreshTrigger, userName })
 const styles = StyleSheet.create({
   container: { paddingHorizontal: 20, marginTop: 70 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  sectionTitle: { fontSize: 25, fontWeight: "bold", color: "#3F587D",},
+  sectionTitleButton: { flexDirection: "row", alignItems: "center" },
+  sectionTitle: { fontSize: 25, fontWeight: "bold", color: "#3F587D", marginRight: 10 },
   sortButton: { marginLeft: 10 },
   dropdownButton: {
     flexDirection: "row",
@@ -211,6 +278,8 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#E0E7F3",
     borderRadius: 10,
+    marginLeft: -5,
+    marginRight: 230,
     marginVertical: 10,
   },
   dropdownButtonText: { fontSize: 16, color: "#3F587D" },
@@ -238,14 +307,13 @@ const styles = StyleSheet.create({
     marginBottom: 10, 
     flexDirection: "row", 
     alignItems: "center",
-    justifyContent: "space-between" //  Aligns edit icon correctly
+    justifyContent: "space-between" // Aligns edit icon correctly
   },
   eventDate: {
     fontSize: 14,
     color: "#3F587D",
     marginTop: 2,
   },
-  
   eventImage: { width: 80, height: 80, borderRadius: 10, marginRight: 15 },
   noImagePlaceholder: { 
     width: 80, 
@@ -262,7 +330,7 @@ const styles = StyleSheet.create({
   eventDescription: { fontSize: 14, color: "#3F587D", marginTop: 2 },
   eventAddress: { fontSize: 12, color: "#3F587D", marginTop: 2, fontStyle: "italic" },
   eventCreator: { fontSize: 12, color: "#3F587D", fontStyle: "italic", marginTop: 2 },
-  editIcon: { padding: 10 }, //  Edit icon styling
+  editIcon: { padding: 10 }, // Edit icon styling
   noEventsContainer: { 
     height: 100, 
     backgroundColor: "#D0D9E8", 
@@ -273,4 +341,4 @@ const styles = StyleSheet.create({
   noEventsText: { fontSize: 16, color: "#3F587D" },
 });
 
-export default EventSection;1
+export default EventSection;
