@@ -16,3 +16,13 @@ def register():
         return jsonify({"msg": "User already exists"}), 400
     users[username] = password  # In production, hash passwords!
     return jsonify({"msg": "Registration successful"}), 201
+
+@auth_bp.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    if users.get(username) != password:
+        return jsonify({"msg": "Invalid credentials"}), 401
+    token = create_access_token(identity=username)
+    return jsonify(access_token=token), 200
