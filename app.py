@@ -11,6 +11,14 @@ app.config['JWT_SECRET_KEY'] = 'test-secret'  # replace with a secure key
 app.register_blueprint(auth_bp, url_prefix = '/api/auth')
 app.register_blueprint(events_bp, url_prefix='/api/events')
 
+# add the Swagger docs endpoint
+@app.route("/api/docs")
+def docs():
+    swag = swagger(app)
+    swag['info']['title'] = "EventLink API"
+    swag['info']['version'] = "1.0"
+    return jsonify(swag)
+
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({"error": "Resource not found"}), 404
