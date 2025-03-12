@@ -4,6 +4,7 @@ import { Checkbox } from "expo-checkbox";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRSVP } from "../utils/RSVPContext"; // Import useRSVP
 
 interface User {
   id: number;
@@ -12,7 +13,6 @@ interface User {
   name: string;
   profilePicture?: string; // New profile picture field
 }
-
 
 interface FormFieldProps {
   email: string;
@@ -27,6 +27,7 @@ const FormField: React.FC<FormFieldProps> = ({ email, setEmail, password, setPas
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [users, setUsers] = useState<User[]>([]); // Load users from AsyncStorage
   const router = useRouter();
+  const { setCurrentUser } = useRSVP(); // Destructure setCurrentUser
 
   // Load users from AsyncStorage when the component mounts
   useEffect(() => {
@@ -59,6 +60,7 @@ const FormField: React.FC<FormFieldProps> = ({ email, setEmail, password, setPas
   
         // ✅ Store only the signed-in user, including profile picture
         await AsyncStorage.setItem("currentUser", JSON.stringify(userExists));
+        setCurrentUser(userExists); // Set currentUser to the signed-in user
   
         router.push("/(auth)/school-select"); // Redirect after sign-in
       } else {
@@ -69,11 +71,6 @@ const FormField: React.FC<FormFieldProps> = ({ email, setEmail, password, setPas
       Alert.alert("Error", "Something went wrong. Please try again.");
     }
   };
-  
-  
-  
-  
-  
 
   return (
     <View style={styles.formContainer}>

@@ -5,6 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import images from "../constants/images";
+import { useRSVP } from "../utils/RSVPContext"; // Import useRSVP
 
 interface ProfileHeaderProps {
     userName: string;
@@ -15,6 +16,7 @@ interface ProfileHeaderProps {
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({ userName, selectedSchool, onProfilePictureUpdate }) => {
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const router = useRouter();
+  const { setCurrentUser } = useRSVP(); // Destructure setCurrentUser
 
   useEffect(() => {
     const loadProfilePicture = async () => {
@@ -65,6 +67,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ userName, selectedSchool,
       { text: "Yes", onPress: async () => {
           try {
             await AsyncStorage.removeItem("currentUser"); // ✅ Remove signed-in user
+            setCurrentUser(null); // Set currentUser to null
             router.replace("/(auth)/sign-in"); // ✅ Ensure user cannot go back
           } catch (error) {
             console.error("Error logging out:", error);

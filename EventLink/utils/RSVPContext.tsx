@@ -14,7 +14,7 @@ interface EventProps {
 interface User {
   name: string;
   email: string;
-  profilePicture: string;
+  profilePicture?: string;
 }
 
 interface RSVPContextProps {
@@ -25,6 +25,7 @@ interface RSVPContextProps {
   loadRSVPedEvents: () => void;
   handleRSVP: (event: EventProps) => void;
   handleUnRSVP: (title: string) => void;
+  setCurrentUser: (user: User | null) => void; // Add this method
 }
 
 const RSVPContext = createContext<RSVPContextProps | undefined>(undefined);
@@ -61,7 +62,6 @@ export const RSVPProvider: React.FC = ({ children }) => {
 
     try {
       const userKey = `rsvpEvents_${currentUser.email}`;
-      console.log('Loading RSVP events for userKey:', userKey); // Log userKey
       const storedRsvpEvents = await AsyncStorage.getItem(userKey);
       const rsvpEvents = storedRsvpEvents ? JSON.parse(storedRsvpEvents) : [];
       setSavedEvents(rsvpEvents);
@@ -79,7 +79,6 @@ export const RSVPProvider: React.FC = ({ children }) => {
 
     try {
       const userKey = `rsvpEvents_${currentUser.email}`;
-      console.log('RSVPing event for userKey:', userKey); // Log userKey
       const storedRsvpEvents = await AsyncStorage.getItem(userKey);
       let rsvpEvents = storedRsvpEvents ? JSON.parse(storedRsvpEvents) : [];
 
@@ -109,7 +108,6 @@ export const RSVPProvider: React.FC = ({ children }) => {
 
     try {
       const userKey = `rsvpEvents_${currentUser.email}`;
-      console.log('Un-RSVPing event for userKey:', userKey); // Log userKey
       const storedRsvpEvents = await AsyncStorage.getItem(userKey);
       let rsvpEvents = storedRsvpEvents ? JSON.parse(storedRsvpEvents) : [];
 
@@ -148,7 +146,7 @@ export const RSVPProvider: React.FC = ({ children }) => {
   }, [currentUser]);
 
   return (
-    <RSVPContext.Provider value={{ currentUser, savedEvents, loading, loadCurrentUser, loadRSVPedEvents, handleRSVP, handleUnRSVP }}>
+    <RSVPContext.Provider value={{ currentUser, savedEvents, loading, loadCurrentUser, loadRSVPedEvents, handleRSVP, handleUnRSVP, setCurrentUser }}>
       {children}
     </RSVPContext.Provider>
   );
