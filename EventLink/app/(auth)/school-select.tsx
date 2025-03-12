@@ -14,7 +14,7 @@ const SchoolSelection = () => {
   const router = useRouter();
 
   //  Static list with only 1 school for now
-  const universityList = ["University of California Riverside", "University of California Berkeley"];
+  const universityList = ["University of California Riverside"];
 
   const handleSearch = (text: string) => {
     setSearch(text);

@@ -8,7 +8,6 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import images from "../constants/images";
 import { Stack } from "expo-router";
 
-
 const UpdateEvent = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -22,7 +21,7 @@ const UpdateEvent = () => {
   const [time, setTime] = useState(
     typeof params?.time === "string" ? new Date(params.time) : new Date()
   );
-    const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
   useEffect(() => {
@@ -116,87 +115,120 @@ const UpdateEvent = () => {
       console.error("Error updating event:", error);
     }
   };
+
+  //  Delete Event
+  const handleDeleteEvent = async () => {
+    Alert.alert("Delete Event", "Are you sure you want to delete this event?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Yes",
+        onPress: async () => {
+          try {
+            const storedEvents = await AsyncStorage.getItem("events");
+            let eventsList = storedEvents ? JSON.parse(storedEvents) : [];
   
+            // Remove the event from the events list
+            const updatedEvents = eventsList.filter((event: any) => event.title !== params.title);
+            await AsyncStorage.setItem("events", JSON.stringify(updatedEvents));
   
+            // Remove the event from all saved RSVP's
+            const storedRSVPs = await AsyncStorage.getItem("rsvpEvents");
+            let rsvpList = storedRSVPs ? JSON.parse(storedRSVPs) : [];
+            const updatedRSVPs = rsvpList.filter((event: any) => event.title !== params.title);
+            await AsyncStorage.setItem("rsvpEvents", JSON.stringify(updatedRSVPs));
+  
+            Alert.alert("Success", "Event has been deleted!");
+            router.push("/(tabs)/home");
+          } catch (error) {
+            console.error("Error deleting event:", error);
+          }
+        },
+      },
+    ]);
+  };
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-    <ScrollView style={styles.container}>
-      <Image source={images.schoolBackground} style={styles.background} />
-      <View style={styles.card}>
-        {/*  Close Button */}
-        <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-          <Ionicons name="close-outline" size={30} color="gray" />
-        </TouchableOpacity>
+      <ScrollView style={styles.container}>
+        <Image source={images.schoolBackground} style={styles.background} />
+        <View style={styles.card}>
+          {/*  Close Button */}
+          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+            <Ionicons name="close-outline" size={30} color="gray" />
+          </TouchableOpacity>
 
-        {/*  Image Upload */}
-        <TouchableOpacity style={styles.imageUpload} onPress={pickImage}>
-          {imageUri ? (
-            <Image
+          {/*  Image Upload */}
+          <TouchableOpacity style={styles.imageUpload} onPress={pickImage}>
+            {imageUri ? (
+              <Image
                 source={{ uri: Array.isArray(imageUri) ? imageUri[0] : imageUri || "" }}
                 style={styles.uploadedImage}
-                />          
+              />
             ) : (
-            <Ionicons name="image-outline" size={50} color="#A9A9A9" />
-          )}
-        </TouchableOpacity>
+              <Ionicons name="image-outline" size={50} color="#A9A9A9" />
+            )}
+          </TouchableOpacity>
 
-        {/* Event Title */}
-        <Text style={styles.label}>Title</Text>
-        <TextInput
+          {/* Event Title */}
+          <Text style={styles.label}>Title</Text>
+          <TextInput
             style={styles.input}
             value={Array.isArray(title) ? title.join(", ") : title || ""}
             onChangeText={setTitle}
-        />
-        {/* Date Picker */}
-        <Text style={styles.label}>Event Date</Text>
-        <TouchableOpacity style={styles.datePicker} onPress={openDatePicker}>
-          <Text style={styles.dateText}>{date.toDateString()}</Text>
-        </TouchableOpacity>
-        {showDatePicker && (
-          <DateTimePicker value={date} mode="date" display={Platform.OS === "ios" ? "spinner" : "default"} onChange={onDateChange} textColor="black"/>
-        )}
+          />
+          {/* Date Picker */}
+          <Text style={styles.label}>Event Date</Text>
+          <TouchableOpacity style={styles.datePicker} onPress={openDatePicker}>
+            <Text style={styles.dateText}>{date.toDateString()}</Text>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker value={date} mode="date" display={Platform.OS === "ios" ? "spinner" : "default"} onChange={onDateChange} textColor="black"/>
+          )}
 
-        {/* Time Picker */}
-        <Text style={styles.label}>Event Time</Text>
-        <TouchableOpacity style={styles.datePicker} onPress={openTimePicker}>
-          <Text style={styles.dateText}>{time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</Text>
-        </TouchableOpacity>
-        {showTimePicker && (
-          <DateTimePicker value={time} mode="time" display={Platform.OS === "ios" ? "spinner" : "default"} onChange={onTimeChange} textColor="black"/>
-        )}
+          {/* Time Picker */}
+          <Text style={styles.label}>Event Time</Text>
+          <TouchableOpacity style={styles.datePicker} onPress={openTimePicker}>
+            <Text style={styles.dateText}>{time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</Text>
+          </TouchableOpacity>
+          {showTimePicker && (
+            <DateTimePicker value={time} mode="time" display={Platform.OS === "ios" ? "spinner" : "default"} onChange={onTimeChange} textColor="black"/>
+          )}
 
-        {/* About Section */}
-        <Text style={styles.label}>About</Text>
-        <TextInput
+          {/* About Section */}
+          <Text style={styles.label}>About</Text>
+          <TextInput
             style={styles.input}
             value={Array.isArray(about) ? about.join(", ") : about || ""}
             onChangeText={setAbout}
-        />
-        {/* Address Section */}
-        <Text style={styles.label}>Address</Text>
-        <TextInput
+          />
+          {/* Address Section */}
+          <Text style={styles.label}>Address</Text>
+          <TextInput
             style={styles.input}
             value={Array.isArray(requirements) ? requirements.join(", ") : requirements} 
             onChangeText={setRequirements}
-        />
+          />
 
-        {/* Requirements Section */}
-        <Text style={styles.label}>Requirements</Text>
-        <TextInput
+          {/* Requirements Section */}
+          <Text style={styles.label}>Requirements</Text>
+          <TextInput
             style={styles.input}
             value={Array.isArray(requirements) ? requirements.join(", ") : requirements} 
             onChangeText={setRequirements}
-        />
+          />
 
+          {/*  Save Button */}
+          <TouchableOpacity style={styles.saveButton} onPress={handleUpdateEvent}>
+            <Text style={styles.saveText}>UPDATE EVENT</Text>
+          </TouchableOpacity>
 
-        {/*  Save Button */}
-        <TouchableOpacity style={styles.saveButton} onPress={handleUpdateEvent}>
-          <Text style={styles.saveText}>UPDATE EVENT</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          {/*  Delete Button */}
+          <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteEvent}>
+            <Text style={styles.deleteText}>DELETE EVENT</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </>
   );
 };
@@ -214,6 +246,8 @@ const styles = StyleSheet.create({
   dateText: { fontSize: 16, color: "#3F587D" },
   saveButton: { backgroundColor: "#3F587D", paddingVertical: 12, borderRadius: 5, alignItems: "center" },
   saveText: { color: "white", fontSize: 18, fontWeight: "bold" },
+  deleteButton: { backgroundColor: "#D9534F", paddingVertical: 12, borderRadius: 5, alignItems: "center", marginTop: 10 },
+  deleteText: { color: "white", fontSize: 18, fontWeight: "bold" },
 });
 
 export default UpdateEvent;

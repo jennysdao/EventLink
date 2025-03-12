@@ -9,6 +9,7 @@ interface EventProps {
   address: string;
   requirements?: string;
   imageUri?: string;
+  creator: string; // Add creator property
 }
 
 interface User {
