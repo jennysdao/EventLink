@@ -85,6 +85,7 @@ const Home = () => {
   }, []);
 
   return (
+    
     <ScrollView
       style={styles.container}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}

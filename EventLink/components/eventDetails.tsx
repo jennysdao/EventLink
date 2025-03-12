@@ -12,17 +12,19 @@ interface EventProps {
   address: string;
   requirements?: string;
   imageUri?: string;
+  creator: string; // Ensure the creator property is included
 }
 
 interface Attendee {
   name: string;
   profilePicture: string;
-  email: string;
+  firstName: string;
+  lastName: string;
 }
 
-const EventDetailsComponent: React.FC<EventProps> = ({ title, date, about, address, requirements, imageUri }) => {
+const EventDetailsComponent: React.FC<EventProps> = ({ title, date, about, address, requirements, imageUri, creator }) => {
   const router = useRouter();
-  const { currentUser, handleRSVP, handleUnRSVP, savedEvents } = useRSVP();
+  const { currentUser, handleRSVP, handleUnRSVP, savedEvents, loadRSVPedEvents } = useRSVP();
   const [isRsvped, setIsRsvped] = useState(false);
   const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [attendeeCount, setAttendeeCount] = useState(0);
@@ -53,12 +55,14 @@ const EventDetailsComponent: React.FC<EventProps> = ({ title, date, about, addre
   };
 
   const handleRSVPClick = async () => {
-    await handleRSVP({ title, date, about, address, requirements, imageUri });
+    await handleRSVP({ title, date, about, address, requirements, imageUri, creator });
+    loadRSVPedEvents(); // Ensure the saved events list is refreshed
     loadAttendees();
   };
 
   const handleUnRSVPClick = async () => {
     await handleUnRSVP(title);
+    loadRSVPedEvents(); // Ensure the saved events list is refreshed
     loadAttendees();
   };
 
@@ -99,8 +103,7 @@ const EventDetailsComponent: React.FC<EventProps> = ({ title, date, about, addre
             {attendees.map((attendee, index) => (
               <View key={index} style={styles.attendee}>
                 <Image source={{ uri: attendee.profilePicture }} style={styles.attendeeImage} />
-                <Text style={styles.attendeeName}>{attendee.name}</Text>
-                <Text style={styles.attendeeEmail}>{attendee.email}</Text>
+                <Text style={styles.attendeeName}>{attendee.firstName} {attendee.lastName}</Text>
               </View>
             ))}
           </View>

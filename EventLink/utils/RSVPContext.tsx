@@ -61,9 +61,11 @@ export const RSVPProvider: React.FC = ({ children }) => {
 
     try {
       const userKey = `rsvpEvents_${currentUser.email}`;
+      console.log('Loading RSVP events for userKey:', userKey); // Log userKey
       const storedRsvpEvents = await AsyncStorage.getItem(userKey);
       const rsvpEvents = storedRsvpEvents ? JSON.parse(storedRsvpEvents) : [];
       setSavedEvents(rsvpEvents);
+      console.log('Loaded RSVP events:', rsvpEvents);
     } catch (error) {
       console.error('Error loading RSVP events:', error);
     }
@@ -77,6 +79,7 @@ export const RSVPProvider: React.FC = ({ children }) => {
 
     try {
       const userKey = `rsvpEvents_${currentUser.email}`;
+      console.log('RSVPing event for userKey:', userKey); // Log userKey
       const storedRsvpEvents = await AsyncStorage.getItem(userKey);
       let rsvpEvents = storedRsvpEvents ? JSON.parse(storedRsvpEvents) : [];
 
@@ -106,6 +109,7 @@ export const RSVPProvider: React.FC = ({ children }) => {
 
     try {
       const userKey = `rsvpEvents_${currentUser.email}`;
+      console.log('Un-RSVPing event for userKey:', userKey); // Log userKey
       const storedRsvpEvents = await AsyncStorage.getItem(userKey);
       let rsvpEvents = storedRsvpEvents ? JSON.parse(storedRsvpEvents) : [];
 
@@ -126,12 +130,20 @@ export const RSVPProvider: React.FC = ({ children }) => {
   };
 
   useEffect(() => {
-    loadCurrentUser();
+    try {
+      loadCurrentUser();
+    } catch (error) {
+      console.error('Error in useEffect loadCurrentUser:', error);
+    }
   }, []);
 
   useEffect(() => {
     if (currentUser) {
-      loadRSVPedEvents();
+      try {
+        loadRSVPedEvents();
+      } catch (error) {
+        console.error('Error in useEffect loadRSVPedEvents:', error);
+      }
     }
   }, [currentUser]);
 

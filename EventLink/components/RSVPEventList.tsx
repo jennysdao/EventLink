@@ -1,60 +1,109 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, FlatList } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const RSVPEventsList = () => {
-  const [rsvpEvents, setRsvpEvents] = useState([]);
+  interface Event {
+    id: number;
+    title: string;
+    imageUri?: string;
+  }
+  
+  const [rsvpEvents, setRsvpEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchRSVPEvents = async () => {
       try {
-        const storedRsvpEvents = await AsyncStorage.getItem("rsvpEvents");
-        if (storedRsvpEvents) setRsvpEvents(JSON.parse(storedRsvpEvents));
+        const storedRsvpEvents = await AsyncStorage.getItem('rsvpEvents');
+        if (storedRsvpEvents) {
+          setRsvpEvents(JSON.parse(storedRsvpEvents));
+        }
       } catch (error) {
-        console.error("Error loading RSVP events:", error);
+        console.error('Error loading RSVP events:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchRSVPEvents();
   }, []);
 
-  interface Event {
-    title: string;
-    date: string;
-    location: string;
-  }
-
-  const renderEvent = ({ item }: { item: Event }) => (
-    <View style={styles.eventCard}>
-      <Text style={styles.eventTitle}>{item.title}</Text>
-      <Text style={styles.eventDate}>{item.date}</Text>
-      <Text style={styles.eventLocation}>{item.location}</Text>
-    </View>
-  );
+  const handleEventPress = (event) => {
+    // Handle event press logic here
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Going To</Text>
-      <FlatList
-        data={rsvpEvents}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={renderEvent}
-        ListEmptyComponent={<Text style={styles.emptyText}>That's all for now!</Text>}
-        contentContainerStyle={styles.eventList}
-      />
+      {loading ? (
+        <ActivityIndicator size="large" color="#748BAB" />
+      ) : rsvpEvents.length === 0 ? (
+        <Text style={styles.noEventsText}>No RSVP'ed events found.</Text>
+      ) : (
+        <FlatList
+          data={rsvpEvents}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <TouchableOpacity style={styles.eventCard} onPress={() => handleEventPress(item)}>
+              {item.imageUri ? (
+                <Image source={{ uri: item.imageUri }} style={styles.eventImage} />
+              ) : (
+                <View style={styles.noImagePlaceholder}>
+                  <Text style={styles.noImageText}>No Image</Text>
+                </View>
+              )}
+              <Text style={styles.eventTitle}>{item.title}</Text>
+            </TouchableOpacity>
+          )}
+        />
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "white", alignItems: "center" },
-  sectionTitle: { fontSize: 30, fontWeight: "bold", color: "#4C5D7D", marginBottom: 10, marginTop: 20, alignSelf: "flex-start", marginLeft: 20 },
-  eventList: { marginTop: 30, paddingBottom: 50 },
-  emptyText: { color: "gray", fontSize: 16, textAlign: "center", marginTop: 20 },
-  eventCard: { padding: 15, borderBottomWidth: 1, borderBottomColor: "#ccc", width: "100%" },
-  eventTitle: { fontSize: 18, fontWeight: "bold" },
-  eventDate: { fontSize: 16, color: "gray" },
-  eventLocation: { fontSize: 16, color: "gray" },
+  container: {
+    flex: 1,
+    padding: 16,
+  },
+  noEventsText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+    color: '#748BAB',
+  },
+  eventCard: {
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  eventImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+  },
+  noImagePlaceholder: {
+    width: '100%',
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#e0e0e0',
+    borderRadius: 8,
+  },
+  noImageText: {
+    color: '#748BAB',
+  },
+  eventTitle: {
+    marginTop: 8,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
 });
 
 export default RSVPEventsList;

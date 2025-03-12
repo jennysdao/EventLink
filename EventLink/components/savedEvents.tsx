@@ -9,7 +9,7 @@ interface EventProps {
   about: string;
   address?: string;
   imageUri?: string;
-  creator: string; // Add the creator property
+  creator?: string; // Add the creator property
 }
 
 const SavedEvents = () => {
@@ -19,6 +19,10 @@ const SavedEvents = () => {
   useEffect(() => {
     loadRSVPedEvents();
   }, []); // Empty dependency array to ensure it only runs once
+
+  useEffect(() => {
+    console.log('Saved events state:', savedEvents); // Add logging
+  }, [savedEvents]);
 
   const handleEventPress = (event: EventProps) => {
     router.push({
@@ -70,7 +74,9 @@ const styles = StyleSheet.create({
   eventCard: { 
     backgroundColor: "#E0E7F3", 
     borderRadius: 10, 
-    padding: 10, 
+    padding: 20, 
+    marginLeft: 20,
+    marginRight: 20,
     marginBottom: 10, 
     flexDirection: "row", 
     alignItems: "center",
