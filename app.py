@@ -11,7 +11,7 @@ app.config['JWT_SECRET_KEY'] = 'test-secret'  # replace with a secure key
 app.register_blueprint(auth_bp, url_prefix = '/api/auth')
 app.register_blueprint(events_bp, url_prefix='/api/events')
 
-# add the Swagger docs endpoint
+# add the Swagger docs endpoints
 @app.route("/api/docs")
 def docs():
     swag = swagger(app)
