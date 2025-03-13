@@ -2,15 +2,19 @@ from flask import Flask, jsonify, request
 from flask_jwt_extended import JWTManager
 from routes.auth import auth_bp
 from routes.events import events_bp
-from flask import SQLAlchemy
-from config import config
+from config import Config
+from database import db
+from flask_migrate import Migrate
 
 # configured placeholder JWT key, 
 app = Flask(__name__)
-app.config['JWT_SECRET_KEY'] = 'test-secret'  # replace with a secure key
 
+app.config['JWT_SECRET_KEY'] = 'test-secret'  # replace with a secure key
 app.config.from_object('config.Config')
-db = SQLAlchemy(app)
+
+db.init_app(app)
+migrate = Migrate(app, db)
+jwt = JWTManager(app)
 
 # register blueprints for modular routes
 app.register_blueprint(auth_bp, url_prefix = '/api/auth')

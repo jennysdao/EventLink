@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app import db
+from database import db
 from models import Event
 
 events_bp = Blueprint('events', __name__)
